@@ -19,7 +19,6 @@ int main(int argc, char const *argv[])
 	/***************** Variáveis *********************/
 	int comp = 0, // Comprimento da imagem
 			larg = 0; // Largura da imagem
-	/*************************************************/
 
 	/***************** Ponteiros *********************/
 	int *pComp,
@@ -27,7 +26,6 @@ int main(int argc, char const *argv[])
 
 	pComp = &comp;
 	pLarg = &larg;
-	/*************************************************/
 
 	/******** Imprimindo os numeros sorteados ********/	     
 	printf("Números Grama\n");
@@ -49,7 +47,6 @@ int main(int argc, char const *argv[])
 		printf(" %2d", numImg[1][i]);
 	}
 	printf("\n\n");
-	/*************************************************/
 
 	/************** Chamada de funções ***************/
 	// Função treinamento: 
@@ -57,9 +54,6 @@ int main(int argc, char const *argv[])
 	//  								 = 'A' para treinamento de imagens de asfalto.
 	treinamento('G',numImg[0],pLarg,pComp);
 	treinamento('A',numImg[1],pLarg,pComp);
-	/*************************************************/
-
-	
 
 	free(numImg);
 	return 0;
@@ -84,7 +78,6 @@ int **sorteio()
 				exit(1);
 			}
 	} 
-	/************************************************/
 
 	/*********** Gerando os Números *****************/
 	srand((int)time(NULL));
@@ -109,6 +102,7 @@ int **sorteio()
 			}
 		} while(aux);
 	}
+	
 	for (int i = 0; i < 50; i++)
 	{
 		do
@@ -129,7 +123,6 @@ int **sorteio()
 			}
 		} while(aux);
 	}
-	/************************************************/
 	
 	return nums;
 }
