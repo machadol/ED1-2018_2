@@ -13,10 +13,24 @@ FILE *arq;
 
 int main(int argc, char const *argv[])
 {
-	// 0 = Grama 1 = Asfalto
-	int **numImg = sorteio();
-	
-	printf("Números grama\n");
+	int **numImg = sorteio(); // numImg[0] para grama.
+                            // numImg[1] para asfalto.
+
+	/***************** Variáveis *********************/
+	int comp = 0, // Comprimento da imagem
+			larg = 0; // Largura da imagem
+	/*************************************************/
+
+	/***************** Ponteiros *********************/
+	int *pComp,
+			*pLarg;
+
+	pComp = &comp;
+	pLarg = &larg;
+	/*************************************************/
+
+	/******** Imprimindo os numeros sorteados ********/	     
+	printf("Números Grama\n");
 	for (int i = 0; i < 50; i++)
 	{
 		if (i%10==0)
@@ -25,9 +39,7 @@ int main(int argc, char const *argv[])
 		}
 		printf(" %2d", numImg[0][i]);
 	}
-	printf("\n\n");
-
-	printf("Números Asfalto\n");
+	printf("\n\nNúmeros Asfalto\n");
 	for (int i = 0; i < 50; i++)
 	{
 		if (i%10==0)
@@ -37,19 +49,17 @@ int main(int argc, char const *argv[])
 		printf(" %2d", numImg[1][i]);
 	}
 	printf("\n\n");
+	/*************************************************/
 
-
-	int comp = 0, 
-			larg = 0;
-
-	int *pComp,
-			*pLarg;
-
-	pComp = &comp;
-	pLarg = &larg;
-
+	/************** Chamada de funções ***************/
+	// Função treinamento: 
+	// 		Parâmetro tipo = 'G' para treinamento de imagens de grama.	
+	//  								 = 'A' para treinamento de imagens de asfalto.
 	treinamento('G',numImg[0],pLarg,pComp);
 	treinamento('A',numImg[1],pLarg,pComp);
+	/*************************************************/
+
+	
 
 	free(numImg);
 	return 0;
@@ -58,6 +68,7 @@ int main(int argc, char const *argv[])
 
 int **sorteio()
 {
+	/************ Alocando Matriz 2x50 **************/
 	int **nums = (int **) malloc(2*sizeof(int));
 		if (nums == NULL)
 		{
@@ -73,20 +84,23 @@ int **sorteio()
 				exit(1);
 			}
 	} 
+	/************************************************/
 
+	/*********** Gerando os Números *****************/
 	srand((int)time(NULL));
-
 	int aux;
-
 	for (int i = 0; i < 50; i++)
 	{
 		do
 		{
+			// Gera o número
 			nums[0][i] = rand()%50 + 1;
 			aux = 0;
 
 			for (int j = 0; j < i; j++)
 			{
+				// Verifica se o número gerado já existe
+				// Se existir outro número será gerado.  
 				if (nums[0][i]==nums[0][j])
 				{
 					aux = 1;
@@ -99,11 +113,14 @@ int **sorteio()
 	{
 		do
 		{
+			// Gera o número
 			nums[1][i] = rand()%50 + 1;
 			aux = 0;
 
 			for (int j = 0; j < i; j++)
 			{
+				// Verifica se o número gerado já existe
+				// Se existir outro número será gerado.  
 				if (nums[1][i]==nums[1][j])
 				{
 					aux = 1;
@@ -112,7 +129,8 @@ int **sorteio()
 			}
 		} while(aux);
 	}
-
+	/************************************************/
+	
 	return nums;
 }
 
@@ -133,26 +151,30 @@ void descobreTamanho(int *larg, int *comp)
 
 	while((ch=getc(arq)) != EOF)
 	{
-		if (linha == 0)
+		// Conta a qtd de ';' somente na primeira linha.
+		// Para encontrar a qtd de colunas(comprimento da img) na matriz
+		if (linha == 0) 
 		{
 			if (ch == ';')
 			{
 				(*comp)++;
 			}
 		}
+		// Conta a qtd de '\n' em todo o arquivo
+		// Para encontrar a qtd de linhas(largura da img) na matriz
 		if (ch == '\n')
 		{
 			(*larg)++;
 			linha++;
 		}
 	}
-	(*comp)++;
+	(*comp)++; // Corrigi a qtd de colunas
 }
 
 void treinamento(char tipo, int *numImg, int *larg, int *comp)
 {	
-	const char dirGrama  [] = "grass/grass_";
-	const char dirAsfalto[] = "asphalt/asphalt_";
+	const char dirGrama  [] = "";
+	const char dirAsfalto[] = "";
  	const char ext[] = ".txt";
 	char imgGrama[25];
 	char imgAsfalto[30];
@@ -161,25 +183,19 @@ void treinamento(char tipo, int *numImg, int *larg, int *comp)
 	{
 		for (int i = 0; i < 25; ++i)
 		{
-			if (numImg[i] <= 9)
-			{
-				sprintf(imgGrama, "%s0%d%s", dirGrama, numImg[i], ext);
-				printf("img = %s", imgGrama);
-				printf("\n");
-			}
-			else
-			{
-				sprintf(imgGrama, "%s%d%s", dirGrama, numImg[i], ext);
-				printf("img = %s", imgGrama);
-				printf("\n");
-			}
- 			
+			// Concatena o número sorteado ao diretório da img
+			sprintf(imgGrama, "grass/grass_%.2d.txt", numImg[i]);
+			printf("img: %s\n", imgGrama);
+
  			abreImagem(imgGrama);
  			descobreTamanho(larg,comp);
- 			printf("Comprimento = %d\nLargura = %d\n",*comp, *larg);
- 			printf("\n");
+
+ 			printf("Comp = %d\nLarg = %d\n\n",*comp, *larg);
+
+ 			// Zera a largura e o comprimento para a próxima img
  			*larg = 0;
  			*comp = 0;
+ 			// Fecha o arquivo
 			fclose(arq);
 		}
 	}
@@ -187,25 +203,19 @@ void treinamento(char tipo, int *numImg, int *larg, int *comp)
 	{
 		for (int i = 0; i < 25; ++i)
 		{
-			if (numImg[i] <= 9)
-			{
-				sprintf(imgAsfalto, "%s0%d%s", dirAsfalto, numImg[i], ext);
-				printf("img = %s", imgAsfalto);
-				printf("\n");
-			}
-			else
-			{
-				sprintf(imgAsfalto, "%s%d%s", dirAsfalto, numImg[i], ext);
-				printf("img = %s", imgAsfalto);
-				printf("\n");
-			}
- 			
+			// Concatena o número sorteado ao diretório da img
+			sprintf(imgAsfalto, "asphalt/asphalt_%.2d.txt", numImg[i]);
+			printf("img: %s\n", imgAsfalto);
+
  			abreImagem(imgAsfalto);
  			descobreTamanho(larg,comp);
- 			printf("Comprimento = %d\nLargura = %d\n",*comp, *larg);
- 			printf("\n");
+
+ 			printf("Comp = %d\nLarg = %d\n\n",*comp, *larg);
+
+ 			// Zera a largura e o comprimento para a próxima img
  			*larg = 0;
  			*comp = 0;
+ 			// Fecha o arquivo
  			fclose(arq);
 		}
 	}
