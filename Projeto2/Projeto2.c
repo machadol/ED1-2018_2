@@ -1,12 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 
+#define TAMANHO_MAX_GLCM 256
+#define VETOR_GLCM 24
+
 int **sorteio();
+int **alocaImagem(int *, int *);
 void abreImagem(char[]);
 void descobreTamanho(int *, int *);
 void treinamento(char, int *, int *, int *);
+void glcmContraste(int **, double *);
+void glcmEnergia(int **, double *);
+void glcmHomogeneidade(int **, double *);
 
 FILE *arq;
 
@@ -15,6 +23,7 @@ int main(int argc, char const *argv[])
 {
 	int **numImg = sorteio(); // numImg[0] para grama.
                             // numImg[1] para asfalto.
+	int **imagem;
 
 	/***************** Variáveis *********************/
 	int comp = 0, // Comprimento da imagem
@@ -52,6 +61,7 @@ int main(int argc, char const *argv[])
 	// Função treinamento: 
 	// 		Parâmetro tipo = 'G' para treinamento de imagens de grama.	
 	//  								 = 'A' para treinamento de imagens de asfalto.
+
 	treinamento('G',numImg[0],pLarg,pComp);
 	treinamento('A',numImg[1],pLarg,pComp);
 
@@ -63,7 +73,7 @@ int main(int argc, char const *argv[])
 int **sorteio()
 {
 	/************ Alocando Matriz 2x50 **************/
-	int **nums = (int **) malloc(2*sizeof(int));
+	int **nums = (int **) malloc(2*sizeof(int*));
 		if (nums == NULL)
 		{
 			printf("Falha! MALLOC.\n");
@@ -164,8 +174,44 @@ void descobreTamanho(int *larg, int *comp)
 	(*comp)++; // Corrigi a qtd de colunas
 }
 
+int **alocaImagem(int *larg, int *comp)
+{	
+	int numPixel; // número referente ao pixel da imagem.
+	char lixo; 	  // auxilia na leitura do ';' e '\n'
+
+	/********** Alocando Matriz da imagem ************/
+	int **imagem = (int **) malloc((*larg)*sizeof(int *));
+	if (imagem == NULL)
+	{
+		printf("Falha MALLOC.\n");
+		exit(1);
+	}
+	for (int i = 0; i < (*comp); i++)
+	{
+		imagem[i] = (int *) malloc((*comp)*sizeof(int));
+		if (imagem[i] == NULL)
+		{
+			printf("Falha MALLOC.\n");
+			exit(1);
+		}
+	}
+
+	rewind(arq);
+
+	for (int i = 0; i < (*larg); i++)
+	{
+		for (int j = 0; j < (*comp); j++)
+		{
+			fscanf(arq,"%d%c",&numPixel,&lixo);
+			imagem[i][j] = numPixel;
+		}
+	}
+	return imagem;
+}
+
 void treinamento(char tipo, int *numImg, int *larg, int *comp)
 {	
+	int **imagem;
 	const char dirGrama  [] = "";
 	const char dirAsfalto[] = "";
  	const char ext[] = ".txt";
@@ -178,13 +224,14 @@ void treinamento(char tipo, int *numImg, int *larg, int *comp)
 		{
 			// Concatena o número sorteado ao diretório da img
 			sprintf(imgGrama, "grass/grass_%.2d.txt", numImg[i]);
-			printf("img: %s\n", imgGrama);
+			printf("img: grass_%.2d\n", numImg[i]);
 
  			abreImagem(imgGrama);
  			descobreTamanho(larg,comp);
+ 			imagem = alocaImagem(larg,comp);
 
- 			printf("Comp = %d\nLarg = %d\n\n",*comp, *larg);
-
+ 			// Libera a imagem da memória
+ 			free(imagem);
  			// Zera a largura e o comprimento para a próxima img
  			*larg = 0;
  			*comp = 0;
@@ -198,13 +245,14 @@ void treinamento(char tipo, int *numImg, int *larg, int *comp)
 		{
 			// Concatena o número sorteado ao diretório da img
 			sprintf(imgAsfalto, "asphalt/asphalt_%.2d.txt", numImg[i]);
-			printf("img: %s\n", imgAsfalto);
+			printf("img: asphalt_%.2d\n", numImg[i]);
 
  			abreImagem(imgAsfalto);
  			descobreTamanho(larg,comp);
+ 			imagem = alocaImagem(larg,comp);
 
- 			printf("Comp = %d\nLarg = %d\n\n",*comp, *larg);
-
+ 			// Libera a imagem da memória
+ 			free(imagem);
  			// Zera a largura e o comprimento para a próxima img
  			*larg = 0;
  			*comp = 0;
@@ -212,4 +260,67 @@ void treinamento(char tipo, int *numImg, int *larg, int *comp)
  			fclose(arq);
 		}
 	}
+}
+
+void glcmContraste(int **matrizGLCM, double *resultContraste)
+{
+	double contraste = 0;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			contraste += pow(abs(i-j),2)*matrizGLCM[i][j];
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; ++i)
+	{
+		if(resultContraste[i] == 0)
+		{
+			resultContraste[i] = contraste;
+			break;
+		}
+	}
+}
+
+void glcmEnergia(int **matrizGLCM, double *resultEnergia)
+{
+	double energia = 0;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			energia += pow(matrizGLCM[i][j],2);
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; i++)
+	{
+		if (resultEnergia[i] == 0)
+		{
+			resultEnergia[i] = energia;
+			break;
+		}
+	}	
+}
+
+void glcmHomogeneidade(int **matrizGLCM, double *resultHomogeneidade)
+{
+	double homogeneidade;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			homogeneidade += matrizGLCM[i][j]/(1 + abs(i-j));
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; i++)
+	{
+		if (resultHomogeneidade[i] == 0)
+		{
+			resultHomogeneidade[i] = homogeneidade;
+		}
+	}
+
 }
