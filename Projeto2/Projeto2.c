@@ -15,23 +15,24 @@ void abreImagem(char[]);
 void descobreTamanho(int *, int *);
 
 void ilbp(int **, double *, int *, int *);
+
+void glcmDireita (int **, double *);
+void glcmEsquerda(int **, double *);
+void glcmSuperior(int **, double *);
+void glcmInferior(int **, double *);
+void glcmSuperiorDireito (int **, double *);
+void glcmSuperiorEsquerdo(int **, double *);
+void glcmInferiorDireita (int **, double *);
+void glcmInferiorEsquerda(int **, double *);
+void glcmCompleta (int **, double *);
+void glcmContraste(int **, double *);
+void glcmEnergia  (int **, double *);
+void glcmHomogeneidade(int **, double *);
+
+void zeraILBPeGLSM (double *, double *);
+void descobreMaxMin(double *, double *, double *);
+void normaliza 		 (double *, double *, double *);
 int menorbinario(int **);
-
-void zeraILBPeGLSM(double *, double *);
-
-
-// void glcmDireita(int **, double *);
-// void glcmEsquerda(int **, double *);
-// void glcmSuperior(int **, double *);
-// void glcmInferior(int **, double *);
-// void glcmSuperiorDireito(int **, double *);
-// void glcmSuperiorEsquerdo(int **, double *);
-// void glcmInferiorDireita(int **, double *);
-// void glcmInferiorEsquerda(int **, double *);
-// void glcmCompleta(int **, double *);
-// void glcmContraste(int **, double *);
-// void glcmEnergia(int **, double *);
-// void glcmHomogeneidade(int **, double *);
 
 FILE *arq;
 
@@ -42,6 +43,8 @@ int main(int argc, char const *argv[])
 	int comp = 0, // Comprimento da imagem
 			larg = 0, // Largura da imagem
 		  numPixel; // número referente ao pixel da imagem.
+	double max,
+				 min;
 	char lixo, 	  // auxilia na leitura do ';' e '\n'
 			 imgGrama[25],
 			 imgAsfalto[30];
@@ -57,17 +60,39 @@ int main(int argc, char const *argv[])
 				 **resultadoTesteAsfalto,
 				 *normal,
 				 *ilbpVet,
-				 *glcmVet;
+				 *glcmVet,
+		  	 *pMax,
+				 *pMin;
 
 	pComp = &comp;
 	pLarg = &larg;
+	pMax	= &max;
+	pMin  = &min;
 	/****************** Alocando ********************/
 	ilbpVet = (double *)calloc(ILBP_VET,sizeof(double));
+		if (ilbpVet == NULL)
+		{
+			printf("Falha! CALLOC ilbpVet\n");
+			exit(1);
+		}
 	glcmVet = (double *)calloc(GLCM_VET,sizeof(double));
+		if (glcmVet == NULL)
+		{
+			printf("Falha! CALLOC glcmVet\n");
+			exit(1);
+		}
+	normal  = (double *)calloc(RESULTADO_VET, sizeof(double));
+		if (normal == NULL)
+		{
+			printf("Falha! CALLOC normal\n");
+			exit(1);
+		}
+
+
 	numImg = (int **) malloc(2*sizeof(int*));
 		if (numImg == NULL)
 		{
-			printf("Falha! MALLOC.\n");
+			printf("Falha! MALLOC numImg\n");
 			exit(1);
 		}
 		for (int i = 0; i < 2; ++i)
@@ -75,7 +100,7 @@ int main(int argc, char const *argv[])
 			numImg[i] = (int *) malloc(50*sizeof(int));
 				if (numImg[i] == NULL)
 				{
-					printf("Falha! MALLOC.\n");
+					printf("Falha! MALLOC numImg[%d]\n",i);
 					exit(1);
 				}
 		}
@@ -85,22 +110,22 @@ int main(int argc, char const *argv[])
 	resultadoTesteAsfalto				= (double **)calloc(QTD_AMOSTRAS,sizeof(double *));
 		if (resultadoTreinamentoGrama == NULL)
 		{
-			printf("Falha! CALLOC\n");
+			printf("Falha! CALLOC resultadoTreinamentoGrama\n");
 			exit(1);
 		} 
 		if (resultadoTreinamentoAsfalto == NULL)
 		{
-			printf("Falha! CALLOC\n");
+			printf("Falha! CALLOC resultadoTreinamentoAsfalto\n");
 			exit(1);
 		} 
 		if (resultadoTesteGrama == NULL)
 		{
-			printf("Falha! CALLOC\n");
+			printf("Falha! CALLOC resultadoTesteGrama\n");
 			exit(1);
 		} 
 		if (resultadoTesteAsfalto == NULL)
 		{
-			printf("Falha! CALLOC\n");
+			printf("Falha! CALLOC resultadoTesteAsfalto\n");
 			exit(1);
 		}
 		for (int i = 0; i < QTD_AMOSTRAS; i++)
@@ -109,6 +134,26 @@ int main(int argc, char const *argv[])
 			resultadoTreinamentoAsfalto[i] = (double *)calloc(RESULTADO_VET,sizeof(double));
 			resultadoTesteGrama[i]				 = (double *)calloc(RESULTADO_VET,sizeof(double));
 			resultadoTesteAsfalto[i]			 = (double *)calloc(RESULTADO_VET,sizeof(double));
+				if (resultadoTreinamentoGrama[i] == NULL)
+				{
+					printf("Falha! CALLOC resultadoTreinamentoGrama[%d]\n",i);
+					exit(1);
+				} 
+				if (resultadoTreinamentoAsfalto[i] == NULL)
+				{
+					printf("Falha! CALLOC resultadoTreinamentoAsfalto[%d]\n",i);
+					exit(1);
+				} 
+				if (resultadoTesteGrama[i] == NULL)
+				{
+					printf("Falha! CALLOC resultadoTesteGrama[%d]\n",i);
+					exit(1);
+				} 
+				if (resultadoTesteAsfalto[i] == NULL)
+				{
+					printf("Falha! CALLOC resultadoTesteAsfalto[%d]\n",i);
+					exit(1);
+				}
 		} 
 
 	/*********** Sorteando os Números ***************/
@@ -182,7 +227,7 @@ int main(int argc, char const *argv[])
 	{
 		// Concatena o número sorteado ao diretório da img
 		sprintf(imgGrama, "grass/grass_%.2d.txt", numImg[0][i]);
-		printf("img: grass_%.2d\n", numImg[0][i]);
+		printf("\nimg: grass_%.2d\n", numImg[0][i]);
 		
 		abreImagem(imgGrama);
  		descobreTamanho(pLarg,pComp);
@@ -191,7 +236,7 @@ int main(int argc, char const *argv[])
 		imagem = (int **) malloc((*pLarg)*sizeof(int *));
 			if (imagem == NULL)
 			{
-				printf("Falha MALLOC.\n");
+				printf("Falha! MALLOC imagem\n");
 				exit(1);
 			}
 			for (int i = 0; i < (*pComp); i++)
@@ -199,7 +244,7 @@ int main(int argc, char const *argv[])
 				imagem[i] = (int *) malloc((*pComp)*sizeof(int));
 				if (imagem[i] == NULL)
 				{
-					printf("Falha MALLOC.\n");
+					printf("Falha! MALLOC imagem[%d]\n",i);
 					exit(1);
 				}
 			}
@@ -214,57 +259,31 @@ int main(int argc, char const *argv[])
 			}
 
 		ilbp(imagem,ilbpVet,pLarg,pComp);
+		glcmCompleta(imagem,glcmVet);
 
- 		// Liberando Memória
- 		for (int i = 0; i < (*pLarg); i++)
- 		{
- 			free(imagem[i]);
- 		}
- 		free(imagem);
- 		// Zera parâmetros
- 		*pLarg = 0;
- 		*pComp = 0;
-		zeraILBPeGLSM(ilbpVet,glcmVet);
- 		// Fecha o arquivo
-		fclose(arq);
-	}
-	/*************** Treinamento Asfalto ****************/
-	for (int i = 0; i < QTD_AMOSTRAS; i++)
-	{
-		// Concatena o número sorteado ao diretório da img
-		sprintf(imgGrama, "asphalt/asphalt_%.2d.txt", numImg[1][i]);
-		printf("img: asphalt_%.2d\n", numImg[1][i]);
-		
-		abreImagem(imgGrama);
- 		descobreTamanho(pLarg,pComp);
+		// Concatena ILBP com GLCM
+		for (int j = 0; j < ILBP_VET; j++)
+		{
+			normal[j] = ilbpVet[j];
+		}
+		for (int j = ILBP_VET, k = 0; j < RESULTADO_VET; j++,k++)
+		{
+			normal[j] = glcmVet[k];
+		}
 
- 		// Alocando Matriz da imagem 
-		imagem = (int **) malloc((*pLarg)*sizeof(int *));
-			if (imagem == NULL)
-			{
-				printf("Falha MALLOC.\n");
-				exit(1);
-			}
-			for (int i = 0; i < (*pComp); i++)
-			{
-				imagem[i] = (int *) malloc((*pComp)*sizeof(int));
-				if (imagem[i] == NULL)
-				{
-					printf("Falha MALLOC.\n");
-					exit(1);
-				}
-			}
-			rewind(arq);
-			for (int i = 0; i < (*pLarg); i++)
-			{
-				for (int j = 0; j < (*pComp); j++)
-				{
-					fscanf(arq,"%d%c",&numPixel,&lixo);
-					imagem[i][j] = numPixel;
-				}
-			}
+		for (int i = 0; i < RESULTADO_VET; i++)
+		{
+			printf("%.10lf ",normal[i]);
+		}
+		printf("\n\n\n");
+		descobreMaxMin(pMax,pMin,normal);
+		printf("max %lf min %lf \n", *pMax, *pMin);
+		normaliza(pMax,pMin,normal);
 
-		ilbp(imagem,ilbpVet,pLarg,pComp);
+		for (int i = 0; i < RESULTADO_VET; i++)
+		{
+			printf("%.10lf ",normal[i]);
+		}
 
  		// Liberando Memória
  		for (int i = 0; i < (*pLarg); i++)
@@ -280,6 +299,57 @@ int main(int argc, char const *argv[])
 		fclose(arq);
 	}
 
+	// /*************** Treinamento Asfalto ****************/
+	// for (int i = 0; i < QTD_AMOSTRAS; i++)
+	// {
+	// 	// Concatena o número sorteado ao diretório da img
+	// 	sprintf(imgGrama, "asphalt/asphalt_%.2d.txt", numImg[1][i]);
+	// 	printf("img: asphalt_%.2d\n", numImg[1][i]);
+		
+	// 	abreImagem(imgGrama);
+ // 		descobreTamanho(pLarg,pComp);
+
+ // 		// Alocando Matriz da imagem 
+	// 	imagem = (int **) malloc((*pLarg)*sizeof(int *));
+	// 		if (imagem == NULL)
+	// 		{
+	// 			printf("Falha MALLOC.\n");
+	// 			exit(1);
+	// 		}
+	// 		for (int i = 0; i < (*pComp); i++)
+	// 		{
+	// 			imagem[i] = (int *) malloc((*pComp)*sizeof(int));
+	// 			if (imagem[i] == NULL)
+	// 			{
+	// 				printf("Falha MALLOC.\n");
+	// 				exit(1);
+	// 			}
+	// 		}
+	// 		rewind(arq);
+	// 		for (int i = 0; i < (*pLarg); i++)
+	// 		{
+	// 			for (int j = 0; j < (*pComp); j++)
+	// 			{
+	// 				fscanf(arq,"%d%c",&numPixel,&lixo);
+	// 				imagem[i][j] = numPixel;
+	// 			}
+	// 		}
+
+	// 	ilbp(imagem,ilbpVet,pLarg,pComp);
+
+ // 		// Liberando Memória
+ // 		for (int i = 0; i < (*pLarg); i++)
+ // 		{
+ // 			free(imagem[i]);
+ // 		}
+ // 		free(imagem);
+ // 		// Zera parâmetros
+ // 		*pLarg = 0;
+ // 		*pComp = 0;
+	// 	zeraILBPeGLSM(ilbpVet,glcmVet);
+ // 		// Fecha o arquivo
+	// 	fclose(arq);
+	// }
 	
 	/*************** Liberando Memória ****************/
 	for (int i = 0; i < 2; i++)
@@ -293,10 +363,14 @@ int main(int argc, char const *argv[])
 		free(resultadoTesteGrama[i]);
 		free(resultadoTesteAsfalto[i]);
 	} 
-		free(resultadoTreinamentoGrama);
-		free(resultadoTreinamentoAsfalto);
-		free(resultadoTesteGrama);
-		free(resultadoTesteAsfalto);
+	free(resultadoTreinamentoGrama);
+	free(resultadoTreinamentoAsfalto);
+	free(resultadoTesteGrama);
+	free(resultadoTesteAsfalto);
+
+	free(ilbpVet);
+	free(glcmVet);
+	free(normal);
 
 	return 0;
 }
@@ -460,354 +534,424 @@ int menorbinario(int **matrizAux)
 	return decimal;
 }
 
-//Matriz GLCM Direita
-// void glcmDireita(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_Direita;
-
-// 	glcm_Direita = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_Direita[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if (j != TAMANHO_MAX_GLCM)
-// 			{
-// 				glcm_Direita[imagem[i][j]][imagem[i][j + 1]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_Direita, resultado);
-// 	glcmEnergia(glcm_Direita, resultado);
-// 	glcmHomogeneidade(glcm_Direita, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		free(glcm_Direita[i]);
-// 	}
-
-// 	free(glcm_Direita);
-// }
-
-// //Matriz GLCM Esquerda
-// void glcmEsquerda(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_Esquerda;
-
-// 	glcm_Esquerda = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_Esquerda[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if (j != 0)
-// 			{
-// 				glcm_Esquerda[imagem[i][j]][imagem[i][j - 1]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_Esquerda, resultado);
-// 	glcmEnergia(glcm_Esquerda, resultado);
-// 	glcmHomogeneidade(glcm_Esquerda, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		free(glcm_Esquerda[i]);
-// 	}
-
-// 	free(glcm_Esquerda);
-// }
-
-// //Matriz GLCM Superior
-// void glcmSuperior(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_Superior;
-
-// 	glcm_Superior = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_Superior[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if (i != 0)
-// 			{
-//                 glcm_Superior[imagem[i - 1][j]][imagem[i][j]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_Superior, resultado);
-// 	glcmEnergia(glcm_Superior, resultado);
-// 	glcmHomogeneidade(glcm_Superior, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		free(glcm_Superior[i]);
-// 	}
-
-// 	free(glcm_Superior);
-// }
-
-// //Matriz GLCM Inferior
-// void glcmInferior(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_Inferior;
-
-// 	glcm_Inferior = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_Inferior[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if (i != TAMANHO_MAX_GLCM)
-// 			{
-// 				glcm_Inferior[imagem[i + 1][j]][imagem[i][j]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_Inferior, resultado);
-// 	glcmEnergia(glcm_Inferior, resultado);
-// 	glcmHomogeneidade(glcm_Inferior, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		free(glcm_Inferior[i]);
-// 	}
-
-// 	free(glcm_Inferior);
-// }
-
-// //Matriz GLCM Superior Direito
-// void glcmSuperiorDireito(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_SuperiorDireito;
-
-// 	glcm_SuperiorDireito = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_SuperiorDireito[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if ((i != 0) && (j != TAMANHO_MAX_GLCM))
-// 			{
-// 				glcm_SuperiorDireito[imagem[i - 1][j]][imagem[i][j + 1]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_SuperiorDireito, resultado);
-// 	glcmEnergia(glcm_SuperiorDireito, resultado);
-// 	glcmHomogeneidade(glcm_SuperiorDireito, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		free(glcm_SuperiorDireito[i]);
-// 	}
-
-// 	free(glcm_SuperiorDireito);
-// }
-
-// //Matriz GLCM Superior Esquerdo
-// void glcmSuperiorEsquerdo(int **imagem, double *resultado)
-// {
-
-// 	int **glcm_SuperiorEsquerdo;
-
-// 	glcm_SuperiorEsquerdo = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		glcm_SuperiorEsquerdo[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			if ((i != 0) && (j != 0)){
-// 				glcm_SuperiorEsquerdo[imagem[i - 1][j]][imagem[i][j - 1]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_SuperiorEsquerdo, resultado);
-// 	glcmEnergia(glcm_SuperiorEsquerdo, resultado);
-// 	glcmHomogeneidade(glcm_SuperiorEsquerdo, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		free(glcm_SuperiorEsquerdo[i]);
-// 	}
-
-// 	free(glcm_SuperiorEsquerdo);
-// }
-
-// //Matriz GLCM Inferior Direita
-// void glcmInferiorDireita(int **imagem, double *resultado){
-
-// 	int **glcm_InferiorDireita;
-
-// 	glcm_InferiorDireita = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		glcm_InferiorDireita[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++){
-// 			if ((i != TAMANHO_MAX_GLCM) && (j != TAMANHO_MAX_GLCM)){
-// 				glcm_InferiorDireita[imagem[i + 1][j]][imagem[i][j + 1]]++;
-// 			}
-// 		}
-
-// 		glcmContraste(glcm_InferiorDireita, resultado);
-// 		glcmEnergia(glcm_InferiorDireita, resultado);
-// 		glcmHomogeneidade(glcm_InferiorDireita, resultado);
-
-// 		for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 			free(glcm_InferiorDireita[i]);
-// 		}
-
-// 		free(glcm_InferiorDireita);
-// 	}
-// }
-
-// //Matriz GLCM Inferior Esquerda
-// void glcmInferiorEsquerda(int **imagem, double *resultado){
-
-// 	int **glcm_InferiorEsquerda;
-
-// 	glcm_InferiorEsquerda = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		glcm_InferiorEsquerda[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
-// 	}
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++){
-// 			if ((i != TAMANHO_MAX_GLCM) && (j != 0)){
-// 				glcm_InferiorEsquerda[imagem[i + 1][j]][imagem[i][j - 1]]++;
-// 			}
-// 		}
-// 	}
-
-// 	glcmContraste(glcm_InferiorEsquerda, resultado);
-// 	glcmEnergia(glcm_InferiorEsquerda, resultado);
-// 	glcmHomogeneidade(glcm_InferiorEsquerda, resultado);
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
-// 		free(glcm_InferiorEsquerda[i]);
-// 	}
-
-// 	free(glcm_InferiorEsquerda);
-// }
-
-// void glcmCompleta(int **imagem, double *resultado)
-// {
-
-//     glcmDireita(imagem, resultado);
-//     glcmEsquerda(imagem, resultado);
-//     glcmSuperior(imagem, resultado);
-//     glcmInferior(imagem, resultado);
-//     glcmSuperiorDireito(imagem, resultado);
-//     glcmSuperiorEsquerdo(imagem, resultado);
-//     glcmInferiorDireita(imagem, resultado);
-//     glcmInferiorEsquerda(imagem, resultado);
-// }
-
-// void glcmContraste(int **matrizGLCM, double *resultContraste)
-// {
-// 	double contraste = 0;
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			contraste += pow(abs(i-j),2)*matrizGLCM[i][j];
-// 		}
-// 	}
-// 	for (int i = 0; i < VETOR_GLCM; ++i)
-// 	{
-// 		if(resultContraste[i] == 0)
-// 		{
-// 			resultContraste[i] = contraste;
-// 			break;
-// 		}
-// 	}
-// }
-
-// void glcmEnergia(int **matrizGLCM, double *resultEnergia)
-// {
-// 	double energia = 0;
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			energia += pow(matrizGLCM[i][j],2);
-// 		}
-// 	}
-// 	for (int i = 0; i < VETOR_GLCM; i++)
-// 	{
-// 		if (resultEnergia[i] == 0)
-// 		{
-// 			resultEnergia[i] = energia;
-// 			break;
-// 		}
-// 	}
-// }
-
-// void glcmHomogeneidade(int **matrizGLCM, double *resultHomogeneidade)
-// {
-// 	double homogeneidade;
-
-// 	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
-// 	{
-// 		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
-// 		{
-// 			homogeneidade += matrizGLCM[i][j]/(1 + abs(i-j));
-// 		}
-// 	}
-// 	for (int i = 0; i < VETOR_GLCM; i++)
-// 	{
-// 		if (resultHomogeneidade[i] == 0)
-// 		{
-// 			resultHomogeneidade[i] = homogeneidade;
-// 		}
-// 	}
-// }
+// Matriz GLCM Direita
+void glcmDireita(int **imagem, double *resultado)
+{
+	int **glcm_Direita;
+
+	glcm_Direita = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_Direita == NULL)
+		{
+			printf("Falha! CALLOC glcm_Direita\n");
+			exit(1);
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_Direita[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_Direita[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_Direita[%d]\n",i);
+				exit(1);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if (j != TAMANHO_MAX_GLCM)
+			{
+				glcm_Direita[imagem[i][j]][imagem[i][j + 1]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_Direita, resultado);
+	glcmEnergia(glcm_Direita, resultado);
+	glcmHomogeneidade(glcm_Direita, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_Direita[i]);
+	}
+
+	free(glcm_Direita);
+}
+
+//Matriz GLCM Esquerda
+void glcmEsquerda(int **imagem, double *resultado)
+{
+	int **glcm_Esquerda;
+
+	glcm_Esquerda = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_Esquerda == NULL)
+		{
+			printf("Falha! CALLOC glcm_Esquerda\n");
+			exit(1);
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_Esquerda[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_Esquerda[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_Esquerda[%d]\n",i);
+				exit(1);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if (j != 0)
+			{
+				glcm_Esquerda[imagem[i][j]][imagem[i][j - 1]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_Esquerda, resultado);
+	glcmEnergia(glcm_Esquerda, resultado);
+	glcmHomogeneidade(glcm_Esquerda, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_Esquerda[i]);
+	}
+
+	free(glcm_Esquerda);
+}
+
+//Matriz GLCM Superior
+void glcmSuperior(int **imagem, double *resultado)
+{
+	int **glcm_Superior;
+
+	glcm_Superior = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_Superior == NULL)
+		{
+			printf("Falha! CALLOC glcm_Superior\n");
+			exit(1);
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_Superior[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_Superior[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_Superior[%d]\n",i);
+				exit(1);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if (i != 0)
+			{
+        glcm_Superior[imagem[i - 1][j]][imagem[i][j]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_Superior, resultado);
+	glcmEnergia(glcm_Superior, resultado);
+	glcmHomogeneidade(glcm_Superior, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_Superior[i]);
+	}
+
+	free(glcm_Superior);
+}
+
+//Matriz GLCM Inferior
+void glcmInferior(int **imagem, double *resultado)
+{
+	int **glcm_Inferior;
+
+	glcm_Inferior = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_Inferior == NULL)
+		{
+			printf("Falha! CALLOC glcm_Inferior\n");
+			exit(1);
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_Inferior[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_Inferior[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_Inferior[%d]\n",i);
+				exit(1);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if (i != TAMANHO_MAX_GLCM)
+			{
+				glcm_Inferior[imagem[i + 1][j]][imagem[i][j]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_Inferior, resultado);
+	glcmEnergia(glcm_Inferior, resultado);
+	glcmHomogeneidade(glcm_Inferior, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_Inferior[i]);
+	}
+
+	free(glcm_Inferior);
+}
+
+//Matriz GLCM Superior Direito
+void glcmSuperiorDireito(int **imagem, double *resultado)
+{
+	int **glcm_SuperiorDireito;
+
+	glcm_SuperiorDireito = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_SuperiorDireito == NULL)
+		{
+			printf("Falha! CALLOC glcm_SuperiorDireito\n");
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_SuperiorDireito[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_SuperiorDireito[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_SuperiorDireito[%d]\n",i);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if ((i != 0) && (j != TAMANHO_MAX_GLCM))
+			{
+				glcm_SuperiorDireito[imagem[i - 1][j]][imagem[i][j + 1]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_SuperiorDireito, resultado);
+	glcmEnergia(glcm_SuperiorDireito, resultado);
+	glcmHomogeneidade(glcm_SuperiorDireito, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_SuperiorDireito[i]);
+	}
+
+	free(glcm_SuperiorDireito);
+}
+
+//Matriz GLCM Superior Esquerdo
+void glcmSuperiorEsquerdo(int **imagem, double *resultado)
+{
+
+	int **glcm_SuperiorEsquerdo;
+
+	glcm_SuperiorEsquerdo = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_SuperiorEsquerdo == NULL)
+		{
+			printf("Falha! CALLOC glcm_SuperiorEsquerdo\n");
+			exit(1);
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_SuperiorEsquerdo[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_SuperiorEsquerdo[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_SuperiorEsquerdo[%d]\n",i);
+				exit(1);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if ((i != 0) && (j != 0))
+			{
+				glcm_SuperiorEsquerdo[imagem[i - 1][j]][imagem[i][j - 1]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_SuperiorEsquerdo, resultado);
+	glcmEnergia(glcm_SuperiorEsquerdo, resultado);
+	glcmHomogeneidade(glcm_SuperiorEsquerdo, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++){
+		free(glcm_SuperiorEsquerdo[i]);
+	}
+
+	free(glcm_SuperiorEsquerdo);
+}
+
+//Matriz GLCM Inferior Direita
+void glcmInferiorDireita(int **imagem, double *resultado)
+{
+	int **glcm_InferiorDireita;
+
+	glcm_InferiorDireita = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_InferiorDireita == NULL)
+		{
+			printf("Falha! CALLOC glcm_InferiorDireita\n");
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_InferiorDireita[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_InferiorDireita[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_InferiorDireita[%d]\n",i);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if ((i != TAMANHO_MAX_GLCM) && (j != TAMANHO_MAX_GLCM))
+			{
+				glcm_InferiorDireita[imagem[i + 1][j]][imagem[i][j + 1]]++;
+			}
+		}
+	}
+	
+	glcmContraste(glcm_InferiorDireita, resultado);
+	glcmEnergia(glcm_InferiorDireita, resultado);
+	glcmHomogeneidade(glcm_InferiorDireita, resultado);
+	
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_InferiorDireita[i]);
+	}
+		free(glcm_InferiorDireita);
+}
+
+//Matriz GLCM Inferior Esquerda
+void glcmInferiorEsquerda(int **imagem, double *resultado)
+{
+	int **glcm_InferiorEsquerda;
+
+	glcm_InferiorEsquerda = (int **)calloc(TAMANHO_MAX_GLCM, sizeof(int *));
+		if (glcm_InferiorEsquerda == NULL)
+		{
+			printf("Falha! CALLOC glcm_InferiorEsquerda\n");
+		}
+		for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+		{
+			glcm_InferiorEsquerda[i] = (int *)calloc(TAMANHO_MAX_GLCM, sizeof(int));
+			if (glcm_InferiorEsquerda[i] == NULL)
+			{
+				printf("Falha! CALLOC glcm_InferiorEsquerda[%d]\n",i);
+			}
+		}
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			if ((i != TAMANHO_MAX_GLCM) && (j != 0))
+			{
+				glcm_InferiorEsquerda[imagem[i + 1][j]][imagem[i][j - 1]]++;
+			}
+		}
+	}
+
+	glcmContraste(glcm_InferiorEsquerda, resultado);
+	glcmEnergia(glcm_InferiorEsquerda, resultado);
+	glcmHomogeneidade(glcm_InferiorEsquerda, resultado);
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		free(glcm_InferiorEsquerda[i]);
+	}
+	free(glcm_InferiorEsquerda);
+}
+
+void glcmCompleta(int **imagem, double *resultado)
+{
+
+    glcmDireita (imagem, resultado);
+    glcmEsquerda(imagem, resultado);
+    glcmSuperior(imagem, resultado);
+    glcmInferior(imagem, resultado);
+    glcmSuperiorDireito (imagem, resultado);
+    glcmSuperiorEsquerdo(imagem, resultado);
+    glcmInferiorDireita (imagem, resultado);
+    glcmInferiorEsquerda(imagem, resultado);
+}
+
+void glcmContraste(int **matrizGLCM, double *resultContraste)
+{
+	double contraste = 0;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			contraste += pow(abs(i-j),2)*matrizGLCM[i][j];
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; ++i)
+	{
+		if(resultContraste[i] == 0)
+		{
+			resultContraste[i] = contraste;
+			break;
+		}
+	}
+}
+
+void glcmEnergia(int **matrizGLCM, double *resultEnergia)
+{
+	double energia = 0;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			energia += pow(matrizGLCM[i][j],2);
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; i++)
+	{
+		if (resultEnergia[i] == 0)
+		{
+			resultEnergia[i] = energia;
+			break;
+		}
+	}
+}
+
+void glcmHomogeneidade(int **matrizGLCM, double *resultHomogeneidade)
+{
+	double homogeneidade;
+
+	for (int i = 0; i < TAMANHO_MAX_GLCM; i++)
+	{
+		for (int j = 0; j < TAMANHO_MAX_GLCM; j++)
+		{
+			homogeneidade += matrizGLCM[i][j]/(1 + abs(i-j));
+		}
+	}
+	for (int i = 0; i < VETOR_GLCM; i++)
+	{
+		if (resultHomogeneidade[i] == 0)
+		{
+			resultHomogeneidade[i] = homogeneidade;
+		}
+	}
+}
 
 void zeraILBPeGLSM(double *ilbp, double *glcm)
 {
@@ -815,4 +959,32 @@ void zeraILBPeGLSM(double *ilbp, double *glcm)
 		ilbp[i] = 0;
 	for (int i = 0; i < GLCM_VET; ++i)
 		glcm[i] = 0;
+}
+
+void descobreMaxMin(double *max, double *min, double *vetor)
+{
+	int tempMax = 0;
+	int tempMin = 0;
+
+	for (int i = 0; i < RESULTADO_VET; i++)
+	{
+		if (*(vetor + i) > tempMax)
+		{
+			tempMax = *(vetor + i);
+		}
+		else if (*(vetor + i) < tempMin)
+		{
+			tempMin = *(vetor + i);
+		}
+	}
+	*max = tempMax;
+	*min = tempMin;
+}
+
+void normaliza(double *max, double *min, double *vetor)
+{
+	for (int i = 0; i < RESULTADO_VET; i++)
+	{
+		*(vetor + i) = ((double)(*(vetor + i) - *min) / (*max - *min));
+	}
 }
