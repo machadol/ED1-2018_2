@@ -13,15 +13,17 @@
 
 void abreImagem(char[]);
 void descobreTamanho(int *, int *);
-
 void ilbp(int **, double *, int *, int *);
 void glcm(int **, double *);
 void glcmMetricas(int **, double *);
-
-void zeraILBPeGLSM (double *, double *);
+void zeraILBPeGLSM(double *, double *);
 void descobreMaxMin(double *, double *, double *);
-void normaliza 		 (double *, double *, double *);
-int menorbinario(int **);
+void normaliza(double *, double *, double *);
+void calculaMedia(double **, double *);
+void distEuclidiana(double *, double *, double **, double **);
+int  comparaDistancia(double , double);
+
+int  menorbinario(int **);
 
 FILE *arq;
 
@@ -33,7 +35,10 @@ int main(int argc, char const *argv[])
 			larg = 0, // Largura da imagem
 		  numPixel; // número referente ao pixel da imagem.
 	double max,
-				 min;
+				 min,
+				 taxaAcerto = 0,
+				 falsaAceitacao = 0,
+				 falsaRejeicao = 0;
 	char lixo, 	  // auxilia na leitura do ';' e '\n'
 			 imgGrama[25],
 			 imgAsfalto[30];
@@ -47,6 +52,9 @@ int main(int argc, char const *argv[])
 				 **resultadoTreinamentoAsfalto,
 				 **resultadoTesteGrama,
 				 **resultadoTesteAsfalto,
+				 **distancia,
+				 *mediaGrama,
+				 *mediaAsfalto,
 				 *normal,
 				 *ilbpVet,
 				 *glcmVet,
@@ -76,20 +84,38 @@ int main(int argc, char const *argv[])
 			printf("Falha! CALLOC normal\n");
 			exit(1);
 		}
-	numImg = (int **) malloc(2*sizeof(int*));
+	mediaGrama   = (double *)calloc(RESULTADO_VET,sizeof(double));
+		if (mediaGrama == NULL)
+		{
+			printf("Falha! CALLOC mediaGrama\n");
+			exit(1);
+		}
+	mediaAsfalto = (double *)calloc(RESULTADO_VET,sizeof(double));
+		if (mediaAsfalto == NULL)
+		{
+			printf("Falha! CALLOC mediaAsfalto\n");
+			exit(1);
+		}
+	numImg    = (int **) calloc(2,sizeof(int*));
 		if (numImg == NULL)
 		{
-			printf("Falha! MALLOC numImg\n");
+			printf("Falha! CALLOC numImg\n");
 			exit(1);
 		}
 		for (int i = 0; i < 2; ++i)
 		{
-			numImg[i] = (int *) malloc(50*sizeof(int));
+			numImg[i] = (int *) calloc(50,sizeof(int));
 				if (numImg[i] == NULL)
 				{
-					printf("Falha! MALLOC numImg[%d]\n",i);
+					printf("Falha! CALLOC numImg[%d]\n",i);
 					exit(1);
 				}
+		}
+	distancia = (double **)calloc(QTD_AMOSTRAS,sizeof(double *));
+		if (distancia == NULL)
+		{
+			printf("Falha! CALLOC distancia\n");
+			exit(1);
 		}
 	resultadoTreinamentoGrama   = (double **)calloc(QTD_AMOSTRAS,sizeof(double *));
 	resultadoTreinamentoAsfalto = (double **)calloc(QTD_AMOSTRAS,sizeof(double *));
@@ -121,6 +147,7 @@ int main(int argc, char const *argv[])
 			resultadoTreinamentoAsfalto[i] = (double *)calloc(RESULTADO_VET,sizeof(double));
 			resultadoTesteGrama[i]				 = (double *)calloc(RESULTADO_VET,sizeof(double));
 			resultadoTesteAsfalto[i]			 = (double *)calloc(RESULTADO_VET,sizeof(double));
+			distancia[i]									 = (double *)calloc(2,sizeof(double ));	
 				if (resultadoTreinamentoGrama[i] == NULL)
 				{
 					printf("Falha! CALLOC resultadoTreinamentoGrama[%d]\n",i);
@@ -139,6 +166,11 @@ int main(int argc, char const *argv[])
 				if (resultadoTesteAsfalto[i] == NULL)
 				{
 					printf("Falha! CALLOC resultadoTesteAsfalto[%d]\n",i);
+					exit(1);
+				}
+				if (distancia[i] == NULL)
+				{
+					printf("Falha! CALLOC distancia[%d]\n",i);
 					exit(1);
 				}
 		} 
@@ -206,15 +238,14 @@ int main(int argc, char const *argv[])
 			}
 			printf(" %2d", numImg[1][i]);
 		}
-		printf("\n\n");
 
-	/*************** Treinamento Grama ****************/
-	printf("Treinamento Grama\n");
+	/*************** Treinamento Grama ***************/
+	printf("\n\nTreinamento Grama\n");
 	for (int i = 0; i < QTD_AMOSTRAS; i++)
 	{
 		// Concatena o número sorteado ao diretório da img
 		sprintf(imgGrama, "grass/grass_%.2d.txt", numImg[0][i]);
-		printf("img: grass_%.2d\n", numImg[0][i]);
+		printf("img %.2d: grass_%.2d\n",i+1, numImg[0][i]);
 		
 		abreImagem(imgGrama);
  		descobreTamanho(pLarg,pComp);
@@ -282,13 +313,13 @@ int main(int argc, char const *argv[])
 		fclose(arq);
 	}	
 
-	/*************** Treinamento Asfalto ****************/
-	printf("Treinamento Asfalto\n");
+	/*************** Treinamento Asfalto *************/
+	printf("\nTreinamento Asfalto\n");
 	for (int i = 0; i < QTD_AMOSTRAS; i++)
 	{
 		// Concatena o número sorteado ao diretório da img
 		sprintf(imgGrama, "asphalt/asphalt_%.2d.txt", numImg[1][i]);
-		printf("img: asphalt_%.2d\n", numImg[1][i]);
+		printf("img %.2d: asphalt_%.2d\n", i+1, numImg[1][i]);
 		
 		abreImagem(imgGrama);
  		descobreTamanho(pLarg,pComp);
@@ -356,13 +387,13 @@ int main(int argc, char const *argv[])
 		fclose(arq);
 	}
 
-	/******************* Teste Grama ********************/
-	printf("Teste Grama\n");
+	/******************* Teste Grama *****************/
+	printf("\nTeste Grama\n");
 	for (int i = 0; i < QTD_AMOSTRAS; i++)
 	{
 		// Concatena o número sorteado ao diretório da img
 		sprintf(imgGrama, "grass/grass_%.2d.txt", numImg[0][QTD_AMOSTRAS + i]);
-		printf("img: grass_%.2d\n", numImg[0][QTD_AMOSTRAS + i]);
+		printf("img %.2d: grass_%.2d\n", i+1, numImg[0][QTD_AMOSTRAS + i]);
 		
 		abreImagem(imgGrama);
  		descobreTamanho(pLarg,pComp);
@@ -430,13 +461,13 @@ int main(int argc, char const *argv[])
 		fclose(arq);
 	}	
 
-	/****************** Teste Asfalto *******************/
-	printf("Teste Asfalto\n");
+	/****************** Teste Asfalto ****************/
+	printf("\nTeste Asfalto\n");
 	for (int i = 0; i < QTD_AMOSTRAS; i++)
 	{
 		// Concatena o número sorteado ao diretório da img
 		sprintf(imgGrama, "asphalt/asphalt_%.2d.txt", numImg[1][QTD_AMOSTRAS + i]);
-		printf("img: asphalt_%.2d\n", numImg[1][QTD_AMOSTRAS + i]);
+		printf("img %.2d: asphalt_%.2d\n",i+1, numImg[1][QTD_AMOSTRAS + i]);
 		
 		abreImagem(imgGrama);
  		descobreTamanho(pLarg,pComp);
@@ -503,8 +534,38 @@ int main(int argc, char const *argv[])
  		// Fecha o arquivo
 		fclose(arq);
 	}
-	
-	/*************** Liberando Memória ****************/
+
+	/**** Calculando média entre os 25 resultados ****/
+	calculaMedia(resultadoTreinamentoGrama, mediaGrama);
+	calculaMedia(resultadoTreinamentoAsfalto, mediaAsfalto);
+
+	/******* Encontando a distância euclidiana *******/
+	distEuclidiana(mediaGrama, mediaAsfalto, resultadoTesteGrama, distancia);
+
+	for (int i = 0; i < QTD_AMOSTRAS; i++)
+	{
+		if ((comparaDistancia(distancia[i][0], distancia[i][1])) == 1)
+			taxaAcerto++;
+		else
+			falsaAceitacao++;
+	}
+
+	distEuclidiana(mediaGrama, mediaAsfalto, resultadoTesteAsfalto, distancia);
+
+	for (int i = 0; i < QTD_AMOSTRAS; i++)
+	{
+		if ((comparaDistancia(distancia[i][0], distancia[i][1])) == 0)
+			taxaAcerto++;
+		else
+			falsaRejeicao++;
+	}
+
+	/**************** Métricas Finais ****************/
+	printf("\n         Taxa de acerto: %.1lf%% \n", (taxaAcerto / 50) * 100);
+	printf("Taxa de falsa aceitação: %.1lf%% \n", (falsaAceitacao / 50) * 100);
+	printf("Taxa de falsa rejeição : %.1lf%% \n", (falsaRejeicao / 50) * 100);
+
+	/*************** Liberando Memória ***************/
 	for (int i = 0; i < 2; i++)
 		free(numImg[i]);
 	free(numImg);
@@ -942,5 +1003,53 @@ void normaliza(double *max, double *min, double *vetor)
 	for (int i = 0; i < RESULTADO_VET; i++)
 	{
 		*(vetor + i) = ((double)(*(vetor + i) - *min) / (*max - *min));
+	}
+}
+
+void calculaMedia(double **matrizResultado, double *media)
+{
+	for (int i = 0; i < RESULTADO_VET; i++)
+	{
+		double aux = 0;
+		for (int j = 0; j < QTD_AMOSTRAS; j++)
+		{
+			aux += matrizResultado[j][i];
+		}
+		media[i] = aux / QTD_AMOSTRAS;
+	}
+}
+
+int comparaDistancia(double grass, double asphalt)
+{
+	if (grass < asphalt)
+		return 1;
+	else
+		return 0;
+}
+
+void distEuclidiana(double *medGrama, double *medAsfalto, double **result, double **distancias)
+{
+	double dist = 0;
+
+	for (int i = 0; i < QTD_AMOSTRAS; i++)
+	{
+		for (int j = 0; j < RESULTADO_VET; j++)
+		{
+			dist += pow((result[i][j] - medGrama[j]), 2);
+		}
+		dist = sqrt(dist);
+		distancias[i][0] = dist;
+	}
+
+	dist = 0;
+
+	for (int i = 0; i < QTD_AMOSTRAS; i++)
+	{
+		for (int j = 0; j < RESULTADO_VET; j++)
+		{
+			dist += pow((result[i][j] - medAsfalto[j]), 2);
+		}
+		dist = sqrt(dist);
+		distancias[i][1] = dist;
 	}
 }
