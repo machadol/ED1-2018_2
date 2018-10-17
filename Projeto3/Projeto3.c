@@ -1,50 +1,142 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+// Amanda
+// Ana
+// Bruna
+// Carlos
+// Fernanda
+// Joao
 
 struct CONTATO
 {
 	char nome[101];
-	char telefone[11];
-	char endereco[101];
-	unsigned int cep;
-	char dtNasc[11];
+ //  char telefone[11];
+ //  char endereco[101];
+ //  char dtNasc[11];
+ //  unsigned int cep;
 
-	struct CONTATO *p;
-	struct CONTATO *a;
+  struct CONTATO *anterior;
+	struct CONTATO *proximo;
 };
 
-typedef struct CONTATO Contato;
+typedef struct CONTATO Pessoa;
+
+Pessoa *insereNovo(Pessoa *, char []);
+Pessoa *pElemento(Pessoa *, int);
+Pessoa *criaListaVazia(Pessoa *);
+void insertionSort(Pessoa *);
+int tamanhoLista(Pessoa *);
+void imprime(Pessoa *);
+void libera(Pessoa *);
+
+
 
 int main(int argc, char const *argv[])
 {
-	int op = 0;
+  Pessoa *pessoas = NULL;
 
-  do
-  {
-    system("clear");
-    printf("\tAgenda");
-    printf(" \n 1. Inserir novo contato." );
-    printf(" \n 2. Remover contato." );
-    printf(" \n 3. Buscar contato." );
-    printf(" \n 4. Visualizar agenda.");
-    printf(" \n 5. Sair.");
-    printf("\nDigite a opção desejada: ");
-    scanf("%d%*c", &op);
-    switch(op)
-    {
-      case 1:
-        break;
-      case 2:
-        break;
-      case 3:
-      	break;
-      case 4:
-      	break;
-      case 5:
-        exit(0);
-    }
-  } while(1);
-	
-	return 0;
+
+  pessoas = insereNovo(pessoas, "Joao");
+  pessoas = insereNovo(pessoas, "Amanda");
+  pessoas = insereNovo(pessoas, "Carlos");
+  pessoas = insereNovo(pessoas, "Fernanda");
+  pessoas = insereNovo(pessoas, "Bruna");
+  pessoas = insereNovo(pessoas, "Ana");
+
+  imprime(pessoas);
+  printf("\n");
+  insertionSort(pessoas);
+  printf("\n");
+  imprime(pessoas);
+
+  libera(pessoas);
+
+  return 0;
 }
+
+
+Pessoa *insereNovo(Pessoa *p, char n[])
+{
+  Pessoa *novo = (Pessoa *)malloc(sizeof(Pessoa));
+    if (novo == NULL)
+      exit(1);
+
+  strcpy(novo->nome, n);
+  novo->proximo = p;
+  novo->anterior = NULL;
+
+  if (p != NULL)
+  {
+    p->anterior = novo;
+  }
+
+  return novo;
+}
+
+int tamanhoLista(Pessoa *p)
+{
+  int tam = 0;
+
+  while(p!=NULL)
+  {
+    p = p->proximo;
+
+    tam ++;
+  }
+
+  return tam;
+}
+
+Pessoa *pElemento(Pessoa *p, int pos)
+{
+  int aux = 0;
+  while(aux < pos)
+  {
+    p = p->proximo;
+    aux++;
+  }
+
+  return p;
+}
+
+
+void insertionSort(Pessoa *p)
+{
+  char escolhido[101];
+  for (int i = 1; i < tamanhoLista(p); i++)
+  {
+    strcpy(escolhido, (pElemento(p, i))->nome);
+    int j = i - 1;
+
+    while((j >= 0) && strcmp((pElemento(p,j)->nome), escolhido) > 0)
+    {
+      strcpy((pElemento(p, j+1))->nome, (pElemento(p, j))->nome);
+      j--;
+    }
+    strcpy((pElemento(p,j+1))->nome,escolhido);
+  }
+}
+
+void imprime(Pessoa *p)
+{
+  Pessoa *elemento;
+
+  for (elemento = p; elemento != NULL; elemento = elemento->proximo)
+  {
+    printf("Nome: %s\n", elemento->nome);
+  }
+}
+void libera(Pessoa *p)
+{
+  Pessoa *elemento;
+
+  for (elemento = p; elemento != NULL; p = elemento)
+  {
+    elemento = elemento->proximo;
+    free(p);
+  }
+}
+
