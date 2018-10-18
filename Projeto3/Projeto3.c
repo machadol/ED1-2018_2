@@ -13,58 +13,93 @@
 struct CONTATO
 {
 	char nome[101];
- //  char telefone[11];
- //  char endereco[101];
- //  char dtNasc[11];
- //  unsigned int cep;
-
-  struct CONTATO *anterior;
-	struct CONTATO *proximo;
+  char telefone[11];
+  char endereco[101];
+  char dtNasc[11];
+  unsigned int cep;
 };
 
-typedef struct CONTATO Pessoa;
+struct ELEMENTO
+{
+  struct CONTATO pessoa;
+  struct ELEMENTO *proximo;
+  struct ELEMENTO *anterior;
+};
 
-Pessoa *insereNovo(Pessoa *, char []);
-Pessoa *pElemento(Pessoa *, int);
-Pessoa *criaListaVazia(Pessoa *);
-void insertionSort(Pessoa *);
-int tamanhoLista(Pessoa *);
-void imprime(Pessoa *);
-void libera(Pessoa *);
+typedef struct ELEMENTO Elemento;
 
+Elemento *insereNovo(Elemento *);
+Elemento *pElemento(Elemento *, int);
+Elemento *criaListaVazia(Elemento *);
+Elemento *insertionSort(Elemento *);
 
+int tamanhoLista(Elemento *);
+void imprime(Elemento *);
+void libera(Elemento *);
+void busca(Elemento *);
 
 int main(int argc, char const *argv[])
 {
-  Pessoa *pessoas = NULL;
+  Elemento *p = NULL;
 
-
-  pessoas = insereNovo(pessoas, "Joao");
-  pessoas = insereNovo(pessoas, "Amanda");
-  pessoas = insereNovo(pessoas, "Carlos");
-  pessoas = insereNovo(pessoas, "Fernanda");
-  pessoas = insereNovo(pessoas, "Bruna");
-  pessoas = insereNovo(pessoas, "Ana");
-
-  imprime(pessoas);
+  p = insertionSort(insereNovo(p));
+  imprime(p);
+  p = insertionSort(insereNovo(p));
+  imprime(p);
+  p = insertionSort(insereNovo(p));
+  imprime(p);
+  p = insertionSort(insereNovo(p));
+  imprime(p);
+  // busca(p); 
   printf("\n");
-  insertionSort(pessoas);
-  printf("\n");
-  imprime(pessoas);
 
-  libera(pessoas);
-
+  libera(p);
   return 0;
 }
 
-
-Pessoa *insereNovo(Pessoa *p, char n[])
+Elemento *insereNovo(Elemento *p)
 {
-  Pessoa *novo = (Pessoa *)malloc(sizeof(Pessoa));
+  Elemento *novo = (Elemento *)malloc(sizeof(Elemento));
     if (novo == NULL)
       exit(1);
 
-  strcpy(novo->nome, n);
+  char nome[101];
+  char telefone[11];
+  char endereco[101];
+  char dtNasc[11];
+  unsigned int cep;
+
+  // system("clear");
+  printf("Informe o nome: ");
+  fgets(nome, sizeof(nome), stdin);
+
+  printf("Informe a data de nascimento: ");
+  fgets(dtNasc, sizeof(dtNasc), stdin);
+  
+  printf("Informe o telefone: ");
+  fgets(telefone, sizeof(telefone), stdin);
+
+  printf("Informe o endereço: ");
+  fgets(endereco, sizeof(endereco), stdin);
+  
+  printf("Informe o CEP: ");
+  scanf("%d%*c", &novo->pessoa.cep);
+
+  if (nome[strlen(nome) - 1] == '\n')
+      nome[strlen(nome) - 1] = 0;
+  if (dtNasc[strlen(dtNasc) - 1] == '\n')
+      dtNasc[strlen(dtNasc) - 1] = 0;
+  if (telefone[strlen(telefone) - 1] == '\n')
+      telefone[strlen(telefone) - 1] = 0;
+  if (endereco[strlen(endereco) - 1] == '\n')
+      endereco[strlen(endereco) - 1] = 0;
+
+  strcpy(novo->pessoa.nome, nome);
+  strcpy(novo->pessoa.dtNasc, dtNasc);
+  strcpy(novo->pessoa.telefone, telefone);
+  strcpy(novo->pessoa.endereco, endereco);
+  
+
   novo->proximo = p;
   novo->anterior = NULL;
 
@@ -76,7 +111,7 @@ Pessoa *insereNovo(Pessoa *p, char n[])
   return novo;
 }
 
-int tamanhoLista(Pessoa *p)
+int tamanhoLista(Elemento *p)
 {
   int tam = 0;
 
@@ -90,7 +125,7 @@ int tamanhoLista(Pessoa *p)
   return tam;
 }
 
-Pessoa *pElemento(Pessoa *p, int pos)
+Elemento *pElemento(Elemento *p, int pos)
 {
   int aux = 0;
   while(aux < pos)
@@ -102,36 +137,80 @@ Pessoa *pElemento(Pessoa *p, int pos)
   return p;
 }
 
+// Elemento *insertionSort(Elemento *p)
+// {
+//   char escolhido[101];
+//   for (int i = 1; i < tamanhoLista(p); i++)
+//   {
+//     strcpy(escolhido, (pElemento(p, i))->pessoa.nome);
+//     int j = i - 1;
 
-void insertionSort(Pessoa *p)
+//     while((j >= 0) && strcmp((pElemento(p,j)->pessoa.nome), escolhido) > 0)
+//     {
+//       strcpy((pElemento(p, j+1))->pessoa.nome, (pElemento(p, j))->pessoa.nome);
+//       j--;
+//     }
+//     strcpy((pElemento(p,j+1))->pessoa.nome,escolhido);
+//   }
+
+//   return p;
+// }
+
+Elemento *insertionSort(Elemento *p)
 {
-  char escolhido[101];
+  char nomeEscolhido[101];
+  char telefoneEscolhido[11];
+  char enderecoEscolhido[101];
+  char dtNascEscolhido[11];
+  unsigned int cepEscolhido;
+
   for (int i = 1; i < tamanhoLista(p); i++)
   {
-    strcpy(escolhido, (pElemento(p, i))->nome);
+    strcpy(nomeEscolhido, (pElemento(p, i))->pessoa.nome);
+    strcpy(telefoneEscolhido, (pElemento(p, i))->pessoa.telefone);
+    strcpy(enderecoEscolhido, (pElemento(p, i))->pessoa.endereco);
+    strcpy(dtNascEscolhido, (pElemento(p, i))->pessoa.dtNasc);
+    cepEscolhido = (pElemento(p,i))->pessoa.cep;
+    
     int j = i - 1;
 
-    while((j >= 0) && strcmp((pElemento(p,j)->nome), escolhido) > 0)
+    while((j >= 0) && strcmp((pElemento(p,j)->pessoa.nome), nomeEscolhido) > 0)
     {
-      strcpy((pElemento(p, j+1))->nome, (pElemento(p, j))->nome);
+      strcpy((pElemento(p, j+1))->pessoa.nome, (pElemento(p, j))->pessoa.nome);      
+      strcpy((pElemento(p, j+1))->pessoa.telefone, (pElemento(p, j))->pessoa.telefone);
+      strcpy((pElemento(p, j+1))->pessoa.endereco, (pElemento(p, j))->pessoa.endereco);
+      strcpy((pElemento(p, j+1))->pessoa.dtNasc, (pElemento(p, j))->pessoa.dtNasc);
+      (pElemento(p, j+1))->pessoa.cep = (pElemento(p, j))->pessoa.cep;
+
       j--;
     }
-    strcpy((pElemento(p,j+1))->nome,escolhido);
+    strcpy((pElemento(p,j+1))->pessoa.nome,nomeEscolhido);
+    strcpy((pElemento(p,j+1))->pessoa.telefone, telefoneEscolhido);
+    strcpy((pElemento(p,j+1))->pessoa.endereco, enderecoEscolhido);
+    strcpy((pElemento(p,j+1))->pessoa.dtNasc,   dtNascEscolhido);
+    (pElemento(p,j+1))->pessoa.cep = cepEscolhido;
   }
+  return p;
 }
 
-void imprime(Pessoa *p)
+void imprime(Elemento *p)
 {
-  Pessoa *elemento;
+  Elemento *elemento;
 
+  // system("clear");
   for (elemento = p; elemento != NULL; elemento = elemento->proximo)
   {
-    printf("Nome: %s\n", elemento->nome);
+    printf("Nome: %s\n", elemento->pessoa.nome);
+    printf("Data nascimento: %s\n", elemento->pessoa.dtNasc);
+    printf("Telefone: %s\n", elemento->pessoa.telefone);
+    printf("Endereço: %s\n", elemento->pessoa.endereco);
+    printf("CEP: %d\n\n", elemento->pessoa.cep);
   }
 }
-void libera(Pessoa *p)
+
+void libera(Elemento *p)
 {
-  Pessoa *elemento;
+  Elemento *elemento;
 
   for (elemento = p; elemento != NULL; p = elemento)
   {
@@ -140,3 +219,29 @@ void libera(Pessoa *p)
   }
 }
 
+void busca(Elemento *p)
+{ 
+  Elemento *elemento;
+
+  char buscaNome[101];
+  char nome[101];
+
+  printf("Buscar por: ");
+  fgets(nome, sizeof(nome), stdin);
+  if (nome[strlen(nome) - 1] == '\n')
+    nome[strlen(nome) - 1] = 0;
+
+
+  for (elemento = p; elemento != NULL; elemento = elemento->proximo)
+  {
+    if (strstr(elemento->pessoa.nome, buscaNome)!=NULL)
+    {
+      printf("Nome: %s\n", elemento->pessoa.nome);
+      printf("Data nascimento: %s\n", elemento->pessoa.dtNasc);
+      printf("Telefone: %s\n", elemento->pessoa.telefone);
+      printf("Endereço: %s\n", elemento->pessoa.endereco);
+      printf("CEP: %d\n\n", elemento->pessoa.cep);
+    }
+  }
+
+}
