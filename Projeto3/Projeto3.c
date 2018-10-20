@@ -35,12 +35,12 @@ Agenda *insereContato(Agenda *, Contato *);
 Agenda *insertionSort(Agenda *);
 Agenda *pElemento(Agenda *, int);
 int tamanhoLista(Agenda *);
-
+int validaDtNasc(char *);
+int validaTelefone(char *);
 void imprimir(Agenda *);
 void liberar(Agenda *);
 void buscar(Agenda *, char *);
 void remover(Agenda **, char *);
-
 void menu();
 
 int main(int argc, char const *argv[])
@@ -58,11 +58,12 @@ int main(int argc, char const *argv[])
     {
       case 1: // Inserir
         {
-          char nome[101];
-          char telefone[11];
-          char endereco[101];
-          char dtNasc[11];
+          char nome[102];
+          char telefone[12];
+          char endereco[102];
+          char dtNasc[12];
           unsigned int cep;
+          int valida = 0;
 
           Contato *dadosPessoa = (Contato *)malloc(sizeof(Contato));
 
@@ -71,13 +72,29 @@ int main(int argc, char const *argv[])
           fgets(nome, sizeof(nome), stdin);
           nome[strlen(nome) - 1] = '\0';
 
-          printf("Informe a data de nascimento: ");
-          fgets(dtNasc, sizeof(dtNasc), stdin);
-          dtNasc[strlen(dtNasc) - 1] = '\0';
+          do
+          {
+            printf("Informe a data de nascimento no formato dd/mm/aaaa: ");
+            fgets(dtNasc, sizeof(dtNasc), stdin);
+            dtNasc[strlen(dtNasc) - 1] = '\0';
+            valida = validaDtNasc(dtNasc);
+  
+            if (!valida)
+              printf("\nFormato inválido, tente novamente!\n\n");
+          }
+          while (!valida);
 
-          printf("Informe o telefone: ");
-          fgets(telefone, sizeof(telefone), stdin);
-          telefone[strlen(telefone) - 1] = '\0';
+          do
+          {
+            printf("Informe o telefone no formato XXXXX-XXXX: ");
+            fgets(telefone, sizeof(telefone), stdin);
+            telefone[strlen(telefone) - 1] = '\0';
+            valida = validaTelefone(telefone);
+            
+            if (!valida)
+              printf("\nFormato inválido, tente novamente!\n"); 
+          }
+          while (!valida);
 
           printf("Informe o endereço: ");
           fgets(endereco, sizeof(endereco), stdin);
@@ -331,4 +348,42 @@ void remover(Agenda **ag , char *removeNome)
   }
 
   printf("Contato removido!\n");
+}
+
+int validaDtNasc(char *dtNasc)
+{
+  int tam = strlen(dtNasc);
+
+  if (tam != 10)
+    return 0;
+
+  for (int i = 0; i < tam; i++)
+  {
+    if (dtNasc[i] > '0' || dtNasc[i] < '9')
+    {
+      if (i == 2 && dtNasc[i] != '/')
+        return 0;
+      if (i == 5 && dtNasc[i] != '/')
+        return 0;
+    }
+  }
+  return 1;
+}
+
+int validaTelefone(char *telefone)
+{
+  int tam = strlen(telefone);
+
+  if (tam != 10)
+    return 0;
+
+  for (int i = 0; i < tam - 1; i++)
+  {
+    if (telefone[i] > '0' || telefone[i] < '9')
+    {
+      if (i == 5 && telefone[i] != '-')
+        return 0;
+    }
+  }
+  return 1;
 }
