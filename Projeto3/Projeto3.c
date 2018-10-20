@@ -12,112 +12,184 @@
 
 struct CONTATO
 {
-	char nome[101];
-  char telefone[11];
-  char endereco[101];
-  char dtNasc[11];
-  unsigned int cep;
-};
-
-struct ELEMENTO
-{
-  struct CONTATO pessoa;
-  struct ELEMENTO *proximo;
-  struct ELEMENTO *anterior;
-};
-
-typedef struct ELEMENTO Elemento;
-
-Elemento *insereNovo(Elemento *);
-Elemento *pElemento(Elemento *, int);
-Elemento *criaListaVazia(Elemento *);
-Elemento *insertionSort(Elemento *);
-
-int tamanhoLista(Elemento *);
-void imprime(Elemento *);
-void libera(Elemento *);
-void busca(Elemento *);
-
-int main(int argc, char const *argv[])
-{
-  Elemento *p = NULL;
-
-  p = insertionSort(insereNovo(p));
-  imprime(p);
-  p = insertionSort(insereNovo(p));
-  imprime(p);
-  p = insertionSort(insereNovo(p));
-  imprime(p);
-  p = insertionSort(insereNovo(p));
-  imprime(p);
-  // busca(p); 
-  printf("\n");
-
-  libera(p);
-  return 0;
-}
-
-Elemento *insereNovo(Elemento *p)
-{
-  Elemento *novo = (Elemento *)malloc(sizeof(Elemento));
-    if (novo == NULL)
-      exit(1);
-
   char nome[101];
   char telefone[11];
   char endereco[101];
   char dtNasc[11];
   unsigned int cep;
 
-  // system("clear");
-  printf("Informe o nome: ");
-  fgets(nome, sizeof(nome), stdin);
+};
 
-  printf("Informe a data de nascimento: ");
-  fgets(dtNasc, sizeof(dtNasc), stdin);
-  
-  printf("Informe o telefone: ");
-  fgets(telefone, sizeof(telefone), stdin);
+struct ELEMENTO
+{
+  struct CONTATO  pessoa;
+  struct ELEMENTO *proximo;
+  struct ELEMENTO *anterior;
+};
 
-  printf("Informe o endereço: ");
-  fgets(endereco, sizeof(endereco), stdin);
-  
-  printf("Informe o CEP: ");
-  scanf("%d%*c", &novo->pessoa.cep);
+typedef struct ELEMENTO Agenda;
+typedef struct CONTATO Contato;
 
-  if (nome[strlen(nome) - 1] == '\n')
-      nome[strlen(nome) - 1] = 0;
-  if (dtNasc[strlen(dtNasc) - 1] == '\n')
-      dtNasc[strlen(dtNasc) - 1] = 0;
-  if (telefone[strlen(telefone) - 1] == '\n')
-      telefone[strlen(telefone) - 1] = 0;
-  if (endereco[strlen(endereco) - 1] == '\n')
-      endereco[strlen(endereco) - 1] = 0;
+Agenda *criaAgenda();
+Agenda *insereContato(Agenda *, Contato *);
+Agenda *insertionSort(Agenda *);
+Agenda *pElemento(Agenda *, int);
+int tamanhoLista(Agenda *);
 
-  strcpy(novo->pessoa.nome, nome);
-  strcpy(novo->pessoa.dtNasc, dtNasc);
-  strcpy(novo->pessoa.telefone, telefone);
-  strcpy(novo->pessoa.endereco, endereco);
-  
+void imprimir(Agenda *);
+void liberar(Agenda *);
+void buscar(Agenda *, char *);
+void remover(Agenda **, char *);
 
-  novo->proximo = p;
+void menu();
+
+int main(int argc, char const *argv[])
+{
+  Agenda *agenda;
+  agenda = criaAgenda();
+  int op = 0;
+
+  do
+  {
+    printf("\n\n");
+    menu();
+    scanf("%d%*c", &op);
+    switch(op)
+    {
+      case 1: // Inserir
+        {
+          char nome[101];
+          char telefone[11];
+          char endereco[101];
+          char dtNasc[11];
+          unsigned int cep;
+
+          Contato *dadosPessoa = (Contato *)malloc(sizeof(Contato));
+
+          system("clear");
+          printf("Informe o nome: ");
+          fgets(nome, sizeof(nome), stdin);
+          nome[strlen(nome) - 1] = '\0';
+
+          printf("Informe a data de nascimento: ");
+          fgets(dtNasc, sizeof(dtNasc), stdin);
+          dtNasc[strlen(dtNasc) - 1] = '\0';
+
+          printf("Informe o telefone: ");
+          fgets(telefone, sizeof(telefone), stdin);
+          telefone[strlen(telefone) - 1] = '\0';
+
+          printf("Informe o endereço: ");
+          fgets(endereco, sizeof(endereco), stdin);
+          endereco[strlen(endereco) - 1] = '\0';
+          
+          printf("Informe o CEP: ");
+          scanf("%d%*c", &dadosPessoa->cep);
+
+          strcpy(dadosPessoa->nome, nome);
+          strcpy(dadosPessoa->dtNasc, dtNasc);
+          strcpy(dadosPessoa->telefone, telefone);
+          strcpy(dadosPessoa->endereco, endereco);
+
+          agenda = insertionSort(insereContato(agenda, dadosPessoa));
+        }      
+        break;
+      case 2: // Remover
+        {
+          char removeNome[101];
+
+          printf("\nRemover onde tenha: ");
+          fgets(removeNome, sizeof(removeNome), stdin);
+          removeNome[strlen(removeNome) - 1] = '\0';
+          system("clear");
+          remover(&agenda, removeNome);
+        }
+        break;
+      case 3: // Buscar
+        {
+          char buscaNome[101];
+
+          printf("\nBuscar onde tenha: ");
+          fgets(buscaNome, sizeof(buscaNome), stdin);
+          buscaNome[strlen(buscaNome) - 1] = '\0';
+          system("clear");
+          buscar(agenda, buscaNome);
+        }
+        break;
+      case 4: //Imprimir
+        system("clear");
+        imprimir(agenda);
+        break;
+      case 5: // Sair
+        system("clear");
+        liberar(agenda);
+        exit(0);
+    }
+  } while(1);
+
+
+  return 0;
+}
+
+void menu()
+{
+  printf("************************\n");
+  printf("*\t AGENDA        *\n");
+  printf("************************\n");
+  printf("*  Opções:             *");
+  printf("\n*  1. Inserir.         *" );
+  printf("\n*  2. Remover.         *" );
+  printf("\n*  3. Buscar.          *" );
+  printf("\n*  4. Imprimir.        *" );
+  printf("\n*  5. Sair.            *" );
+  printf("\n************************");
+  printf("\nDigite a opção desejada: ");
+}
+
+Agenda *criaAgenda()
+{
+  Agenda *ag = (Agenda *)malloc(sizeof(Agenda));
+  if (ag != NULL)
+    ag = NULL;
+  return ag;
+}
+
+void liberar(Agenda *ag)
+{
+  Agenda *no;
+  for (no = ag; no != NULL; ag = no)
+  {
+    no = no->proximo;
+    free(ag);
+  }
+}
+
+
+Agenda *insereContato(Agenda *ag, Contato *dadosPessoa)
+{
+  Agenda *novo = (Agenda *)malloc(sizeof(Agenda));
+    if (novo == NULL)
+      exit(1);
+
+  novo->pessoa = *dadosPessoa;
+  novo->proximo = ag;
   novo->anterior = NULL;
 
-  if (p != NULL)
+  if (ag != NULL)
   {
-    p->anterior = novo;
+    ag->anterior = novo;
   }
 
   return novo;
 }
 
-int tamanhoLista(Elemento *p)
+int tamanhoLista(Agenda *ag)
 {
   int tam = 0;
 
-  while(p!=NULL)
+  while(ag!=NULL)
   {
-    p = p->proximo;
+    ag = ag->proximo;
 
     tam ++;
   }
@@ -125,38 +197,18 @@ int tamanhoLista(Elemento *p)
   return tam;
 }
 
-Elemento *pElemento(Elemento *p, int pos)
+Agenda *pElemento(Agenda *ag, int pos)
 {
   int aux = 0;
   while(aux < pos)
   {
-    p = p->proximo;
+    ag = ag->proximo;
     aux++;
   }
-
-  return p;
+  return ag;
 }
 
-// Elemento *insertionSort(Elemento *p)
-// {
-//   char escolhido[101];
-//   for (int i = 1; i < tamanhoLista(p); i++)
-//   {
-//     strcpy(escolhido, (pElemento(p, i))->pessoa.nome);
-//     int j = i - 1;
-
-//     while((j >= 0) && strcmp((pElemento(p,j)->pessoa.nome), escolhido) > 0)
-//     {
-//       strcpy((pElemento(p, j+1))->pessoa.nome, (pElemento(p, j))->pessoa.nome);
-//       j--;
-//     }
-//     strcpy((pElemento(p,j+1))->pessoa.nome,escolhido);
-//   }
-
-//   return p;
-// }
-
-Elemento *insertionSort(Elemento *p)
+Agenda *insertionSort(Agenda *ag)
 {
   char nomeEscolhido[101];
   char telefoneEscolhido[11];
@@ -164,84 +216,119 @@ Elemento *insertionSort(Elemento *p)
   char dtNascEscolhido[11];
   unsigned int cepEscolhido;
 
-  for (int i = 1; i < tamanhoLista(p); i++)
+  for (int i = 1; i < tamanhoLista(ag); i++)
   {
-    strcpy(nomeEscolhido, (pElemento(p, i))->pessoa.nome);
-    strcpy(telefoneEscolhido, (pElemento(p, i))->pessoa.telefone);
-    strcpy(enderecoEscolhido, (pElemento(p, i))->pessoa.endereco);
-    strcpy(dtNascEscolhido, (pElemento(p, i))->pessoa.dtNasc);
-    cepEscolhido = (pElemento(p,i))->pessoa.cep;
+    strcpy(nomeEscolhido, (pElemento(ag, i))->pessoa.nome);
+    strcpy(telefoneEscolhido, (pElemento(ag, i))->pessoa.telefone);
+    strcpy(enderecoEscolhido, (pElemento(ag, i))->pessoa.endereco);
+    strcpy(dtNascEscolhido, (pElemento(ag, i))->pessoa.dtNasc);
+    cepEscolhido = (pElemento(ag,i))->pessoa.cep;
     
     int j = i - 1;
 
-    while((j >= 0) && strcmp((pElemento(p,j)->pessoa.nome), nomeEscolhido) > 0)
+    while((j >= 0) && strcmp((pElemento(ag,j)->pessoa.nome), nomeEscolhido) > 0)
     {
-      strcpy((pElemento(p, j+1))->pessoa.nome, (pElemento(p, j))->pessoa.nome);      
-      strcpy((pElemento(p, j+1))->pessoa.telefone, (pElemento(p, j))->pessoa.telefone);
-      strcpy((pElemento(p, j+1))->pessoa.endereco, (pElemento(p, j))->pessoa.endereco);
-      strcpy((pElemento(p, j+1))->pessoa.dtNasc, (pElemento(p, j))->pessoa.dtNasc);
-      (pElemento(p, j+1))->pessoa.cep = (pElemento(p, j))->pessoa.cep;
+      strcpy((pElemento(ag, j+1))->pessoa.nome, (pElemento(ag, j))->pessoa.nome);      
+      strcpy((pElemento(ag, j+1))->pessoa.telefone, (pElemento(ag, j))->pessoa.telefone);
+      strcpy((pElemento(ag, j+1))->pessoa.endereco, (pElemento(ag, j))->pessoa.endereco);
+      strcpy((pElemento(ag, j+1))->pessoa.dtNasc, (pElemento(ag, j))->pessoa.dtNasc);
+      (pElemento(ag, j+1))->pessoa.cep = (pElemento(ag, j))->pessoa.cep;
 
       j--;
     }
-    strcpy((pElemento(p,j+1))->pessoa.nome,nomeEscolhido);
-    strcpy((pElemento(p,j+1))->pessoa.telefone, telefoneEscolhido);
-    strcpy((pElemento(p,j+1))->pessoa.endereco, enderecoEscolhido);
-    strcpy((pElemento(p,j+1))->pessoa.dtNasc,   dtNascEscolhido);
-    (pElemento(p,j+1))->pessoa.cep = cepEscolhido;
+    strcpy((pElemento(ag,j+1))->pessoa.nome,nomeEscolhido);
+    strcpy((pElemento(ag,j+1))->pessoa.telefone, telefoneEscolhido);
+    strcpy((pElemento(ag,j+1))->pessoa.endereco, enderecoEscolhido);
+    strcpy((pElemento(ag,j+1))->pessoa.dtNasc,   dtNascEscolhido);
+    (pElemento(ag,j+1))->pessoa.cep = cepEscolhido;
   }
-  return p;
+  return ag;
 }
 
-void imprime(Elemento *p)
+void imprimir(Agenda *ag)
 {
-  Elemento *elemento;
+  Agenda *no = ag;
 
-  // system("clear");
-  for (elemento = p; elemento != NULL; elemento = elemento->proximo)
-  {
-    printf("Nome: %s\n", elemento->pessoa.nome);
-    printf("Data nascimento: %s\n", elemento->pessoa.dtNasc);
-    printf("Telefone: %s\n", elemento->pessoa.telefone);
-    printf("Endereço: %s\n", elemento->pessoa.endereco);
-    printf("CEP: %d\n\n", elemento->pessoa.cep);
-  }
-}
-
-void libera(Elemento *p)
-{
-  Elemento *elemento;
-
-  for (elemento = p; elemento != NULL; p = elemento)
-  {
-    elemento = elemento->proximo;
-    free(p);
-  }
-}
-
-void busca(Elemento *p)
-{ 
-  Elemento *elemento;
-
-  char buscaNome[101];
-  char nome[101];
-
-  printf("Buscar por: ");
-  fgets(nome, sizeof(nome), stdin);
-  if (nome[strlen(nome) - 1] == '\n')
-    nome[strlen(nome) - 1] = 0;
-
-
-  for (elemento = p; elemento != NULL; elemento = elemento->proximo)
-  {
-    if (strstr(elemento->pessoa.nome, buscaNome)!=NULL)
+  if (no == NULL)
+    printf("Agenda vazia!");
+  else
+    for (no = ag; no != NULL; no = no->proximo)
     {
-      printf("Nome: %s\n", elemento->pessoa.nome);
-      printf("Data nascimento: %s\n", elemento->pessoa.dtNasc);
-      printf("Telefone: %s\n", elemento->pessoa.telefone);
-      printf("Endereço: %s\n", elemento->pessoa.endereco);
-      printf("CEP: %d\n\n", elemento->pessoa.cep);
+      printf("Nome: %s\n", no->pessoa.nome);
+      printf("Data nascimento: %s\n", no->pessoa.dtNasc);
+      printf("Telefone: %s\n", no->pessoa.telefone);
+      printf("Endereço: %s\n", no->pessoa.endereco);
+      printf("CEP: %d\n\n", no->pessoa.cep);
+    }
+}
+
+void buscar(Agenda *ag , char *buscaNome)
+{ 
+  Agenda *no = ag;
+  int aux = 0;
+
+  for (no = ag; no != NULL; no = no->proximo)
+  {
+    if (strstr(no->pessoa.nome, buscaNome)!=NULL)
+    {
+      printf("Nome: %s\n", no->pessoa.nome);
+      printf("Data nascimento: %s\n", no->pessoa.dtNasc);
+      printf("Telefone: %s\n", no->pessoa.telefone);
+      printf("Endereço: %s\n", no->pessoa.endereco);
+      printf("CEP: %d\n\n", no->pessoa.cep);
+    }
+    else
+      aux++;
+  }
+  if (aux == tamanhoLista(ag))
+  {
+    printf("Contato não encontrado!");
+  }
+}
+
+void remover(Agenda **ag , char *removeNome)
+{ 
+  if (*ag == NULL)
+  {
+    printf("Agenda vazia!\n");
+  }
+  else
+  {
+    Agenda *temp = *ag, *aux  = *ag;
+
+    while(temp)
+    {
+      if (strstr(temp->pessoa.nome, removeNome) != NULL)
+      {
+        if (temp == *ag)
+        {
+          aux  = temp;
+          *ag  = (*ag)->proximo;
+          temp = *ag;
+          if(aux->proximo != NULL)
+            aux->proximo->anterior = NULL;
+          aux->proximo = NULL;
+          free(aux);
+          aux = NULL;
+        }
+        else
+        {
+          aux->proximo  = temp->proximo;
+          temp->proximo->anterior = *ag;
+          temp->proximo  = NULL;
+          temp->anterior = NULL;
+
+          free(temp);
+          temp = aux->proximo;
+        }
+      }
+      else
+      {
+        aux = temp; 
+        temp = temp->proximo;
+      }
     }
   }
 
+  printf("Contato removido!\n");
 }
