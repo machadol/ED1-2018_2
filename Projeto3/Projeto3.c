@@ -1,14 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-
-// Amanda
-// Ana
-// Bruna
-// Carlos
-// Fernanda
-// Joao
+// #include <ctype.h>
 
 struct CONTATO
 {
@@ -34,6 +27,7 @@ Agenda *criaAgenda();
 Agenda *insereContato(Agenda *, Contato *);
 Agenda *insertionSort(Agenda *);
 Agenda *pElemento(Agenda *, int);
+Agenda *abreArquivo(Agenda *);
 int tamanhoLista(Agenda *);
 int validaDtNasc(char *);
 int validaTelefone(char *);
@@ -41,6 +35,7 @@ void imprimir(Agenda *);
 void liberar(Agenda *);
 void buscar(Agenda *, char *);
 void remover(Agenda **, char *);
+void salvaContatos(Agenda *);
 void menu();
 
 int main(int argc, char const *argv[])
@@ -48,6 +43,8 @@ int main(int argc, char const *argv[])
   Agenda *agenda;
   agenda = criaAgenda();
   int op = 0;
+
+  agenda = abreArquivo(agenda);
 
   do
   {
@@ -65,12 +62,31 @@ int main(int argc, char const *argv[])
           unsigned int cep;
           int valida = 0;
 
-          Contato *dadosPessoa = (Contato *)malloc(sizeof(Contato));
+          Contato *contatoPessoa = (Contato *)malloc(sizeof(Contato));
 
           system("clear");
           printf("Informe o nome: ");
           fgets(nome, sizeof(nome), stdin);
           nome[strlen(nome) - 1] = '\0';
+
+          do
+          {
+            printf("Informe o telefone no formato XXXXX-XXXX: ");
+            fgets(telefone, sizeof(telefone), stdin);
+            telefone[strlen(telefone) - 1] = '\0';
+            valida = validaTelefone(telefone);
+            
+            if (!valida)
+              printf("\nFormato inválido, tente novamente!\n\n"); 
+          }
+          while (!valida);
+
+          printf("Informe o endereço: ");
+          fgets(endereco, sizeof(endereco), stdin);
+          endereco[strlen(endereco) - 1] = '\0';
+          
+          printf("Informe o CEP: ");
+          scanf("%u%*c", &contatoPessoa->cep);
 
           do
           {
@@ -84,31 +100,13 @@ int main(int argc, char const *argv[])
           }
           while (!valida);
 
-          do
-          {
-            printf("Informe o telefone no formato XXXXX-XXXX: ");
-            fgets(telefone, sizeof(telefone), stdin);
-            telefone[strlen(telefone) - 1] = '\0';
-            valida = validaTelefone(telefone);
-            
-            if (!valida)
-              printf("\nFormato inválido, tente novamente!\n"); 
-          }
-          while (!valida);
+          strcpy(contatoPessoa->nome, nome);
+          strcpy(contatoPessoa->dtNasc, dtNasc);
+          strcpy(contatoPessoa->telefone, telefone);
+          strcpy(contatoPessoa->endereco, endereco);
 
-          printf("Informe o endereço: ");
-          fgets(endereco, sizeof(endereco), stdin);
-          endereco[strlen(endereco) - 1] = '\0';
-          
-          printf("Informe o CEP: ");
-          scanf("%d%*c", &dadosPessoa->cep);
-
-          strcpy(dadosPessoa->nome, nome);
-          strcpy(dadosPessoa->dtNasc, dtNasc);
-          strcpy(dadosPessoa->telefone, telefone);
-          strcpy(dadosPessoa->endereco, endereco);
-
-          agenda = insertionSort(insereContato(agenda, dadosPessoa));
+          agenda = insertionSort(insereContato(agenda, contatoPessoa));
+          free(contatoPessoa);
         }      
         break;
       case 2: // Remover
@@ -139,28 +137,13 @@ int main(int argc, char const *argv[])
         break;
       case 5: // Sair
         system("clear");
+        salvaContatos(agenda);
         liberar(agenda);
         exit(0);
     }
   } while(1);
 
-
   return 0;
-}
-
-void menu()
-{
-  printf("************************\n");
-  printf("*\t AGENDA        *\n");
-  printf("************************\n");
-  printf("*  Opções:             *");
-  printf("\n*  1. Inserir.         *" );
-  printf("\n*  2. Remover.         *" );
-  printf("\n*  3. Buscar.          *" );
-  printf("\n*  4. Imprimir.        *" );
-  printf("\n*  5. Sair.            *" );
-  printf("\n************************");
-  printf("\nDigite a opção desejada: ");
 }
 
 Agenda *criaAgenda()
@@ -171,24 +154,13 @@ Agenda *criaAgenda()
   return ag;
 }
 
-void liberar(Agenda *ag)
-{
-  Agenda *no;
-  for (no = ag; no != NULL; ag = no)
-  {
-    no = no->proximo;
-    free(ag);
-  }
-}
-
-
-Agenda *insereContato(Agenda *ag, Contato *dadosPessoa)
+Agenda *insereContato(Agenda *ag, Contato *contatoPessoa)
 {
   Agenda *novo = (Agenda *)malloc(sizeof(Agenda));
     if (novo == NULL)
       exit(1);
 
-  novo->pessoa = *dadosPessoa;
+  novo->pessoa = *contatoPessoa;
   novo->proximo = ag;
   novo->anterior = NULL;
 
@@ -198,31 +170,6 @@ Agenda *insereContato(Agenda *ag, Contato *dadosPessoa)
   }
 
   return novo;
-}
-
-int tamanhoLista(Agenda *ag)
-{
-  int tam = 0;
-
-  while(ag!=NULL)
-  {
-    ag = ag->proximo;
-
-    tam ++;
-  }
-
-  return tam;
-}
-
-Agenda *pElemento(Agenda *ag, int pos)
-{
-  int aux = 0;
-  while(aux < pos)
-  {
-    ag = ag->proximo;
-    aux++;
-  }
-  return ag;
 }
 
 Agenda *insertionSort(Agenda *ag)
@@ -262,6 +209,161 @@ Agenda *insertionSort(Agenda *ag)
   return ag;
 }
 
+Agenda *pElemento(Agenda *ag, int pos)
+{
+  int aux = 0;
+  while(aux < pos)
+  {
+    ag = ag->proximo;
+    aux++;
+  }
+  return ag;
+}
+
+Agenda *abreArquivo(Agenda *ag)
+{
+  system("clear");
+  FILE *agendaContato = fopen("contatos.txt", "r");
+  if (agendaContato == NULL)
+  {
+    printf("Criando agenda!");
+    agendaContato = fopen("contatos.txt", "w");
+    return 0;
+  }
+  else
+  {
+    printf("Agenda aberta!");
+  }
+
+  int linhas = 0, aux = 0;
+  int nome = 0, telefone = 1, endereco = 2, cep = 3, dtNasc = 4, cifrao = 5;
+  char **conteudoLinha;
+  char lerLinha[101];
+  char ch;
+  Contato *contatoPessoa;
+
+  while((ch = getc(agendaContato)) != EOF)
+  {
+    if (ch == '\n')
+      linhas++;
+  }
+  linhas++;
+
+  conteudoLinha = malloc(linhas*sizeof(char *));
+    for (int i = 0; i < linhas; i++)
+      conteudoLinha[i] = malloc(101*sizeof(char));
+
+  if (conteudoLinha == NULL)
+  {
+    printf("Fail\n");
+    exit(1);
+  }
+
+  rewind(agendaContato);
+
+  while (fgets(lerLinha, sizeof(lerLinha), agendaContato) != NULL)
+  {
+    lerLinha[strlen(lerLinha) - 1] = '\0';
+    strcpy(conteudoLinha[aux],lerLinha);
+    aux++;    
+  }
+
+  for (int i = 0; i < linhas; i++)
+  {
+    if (i == nome)
+    {
+      contatoPessoa = (Contato *)malloc(sizeof(Contato));
+      strcpy(contatoPessoa->nome, conteudoLinha[i]);
+      nome+=6;
+    }
+    if (i == telefone)
+    {
+      strcpy(contatoPessoa->telefone, conteudoLinha[i]);
+      telefone+=6;
+    }
+    if (i == endereco)
+    {
+      strcpy(contatoPessoa->endereco, conteudoLinha[i]);
+      endereco+=6;
+    }
+    if (i == cep)
+    {
+      unsigned int cepNum = atoi(conteudoLinha[i]);
+      contatoPessoa->cep =  cepNum;
+      cep+=6;
+    }
+    if (i == dtNasc)
+    {
+      strcpy(contatoPessoa->dtNasc, conteudoLinha[i]);
+      dtNasc+=6;
+    }
+    if (i == cifrao)
+    {
+      ag = insertionSort(insereContato(ag, contatoPessoa));
+      free(contatoPessoa);
+      cifrao+=6;
+    }
+  }
+  
+  for (int i = 0; i < linhas; i++) free(conteudoLinha[i]);
+  free(conteudoLinha);
+  
+  fclose(agendaContato);
+  return ag;
+}
+
+int tamanhoLista(Agenda *ag)
+{
+  int tam = 0;
+
+  while(ag!=NULL)
+  {
+    ag = ag->proximo;
+
+    tam ++;
+  }
+
+  return tam;
+}
+
+int validaDtNasc(char *dtNasc)
+{
+  int tam = strlen(dtNasc);
+
+  if (tam != 10)
+    return 0;
+
+  for (int i = 0; i < tam; i++)
+  {
+    if (dtNasc[i] > '0' || dtNasc[i] < '9')
+    {
+      if (i == 2 && dtNasc[i] != '/')
+        return 0;
+      if (i == 5 && dtNasc[i] != '/')
+        return 0;
+    }
+  }
+  return 1;
+}
+
+int validaTelefone(char *telefone)
+{
+  int tam = strlen(telefone);
+
+  if (tam != 10)
+    return 0;
+
+  for (int i = 0; i < tam - 1; i++)
+  {
+    if (telefone[i] > '0' || telefone[i] < '9')
+    {
+      if (i == 5 && telefone[i] != '-')
+        return 0;
+    }
+  }
+  return 1;
+}
+
 void imprimir(Agenda *ag)
 {
   Agenda *no = ag;
@@ -271,12 +373,22 @@ void imprimir(Agenda *ag)
   else
     for (no = ag; no != NULL; no = no->proximo)
     {
-      printf("Nome: %s\n", no->pessoa.nome);
-      printf("Data nascimento: %s\n", no->pessoa.dtNasc);
-      printf("Telefone: %s\n", no->pessoa.telefone);
-      printf("Endereço: %s\n", no->pessoa.endereco);
-      printf("CEP: %d\n\n", no->pessoa.cep);
+      printf("Nome.................. %s\n", no->pessoa.nome);
+      printf("Telefone.............. %s\n", no->pessoa.telefone);
+      printf("Endereço.............. %s\n", no->pessoa.endereco);
+      printf("CEP................... %u\n", no->pessoa.cep);
+      printf("Data nascimento....... %s\n\n", no->pessoa.dtNasc);
     }
+}
+
+void liberar(Agenda *ag)
+{
+  Agenda *no;
+  for (no = ag; no != NULL; ag = no)
+  {
+    no = no->proximo;
+    free(ag);
+  }
 }
 
 void buscar(Agenda *ag , char *buscaNome)
@@ -327,6 +439,7 @@ void remover(Agenda **ag , char *removeNome)
           aux->proximo = NULL;
           free(aux);
           aux = NULL;
+          printf("Contato removido!\n");
         }
         else
         {
@@ -337,6 +450,7 @@ void remover(Agenda **ag , char *removeNome)
 
           free(temp);
           temp = aux->proximo;
+          printf("Contato removido!\n");
         }
       }
       else
@@ -346,44 +460,37 @@ void remover(Agenda **ag , char *removeNome)
       }
     }
   }
-
-  printf("Contato removido!\n");
 }
 
-int validaDtNasc(char *dtNasc)
+void salvaContatos(Agenda *ag)
 {
-  int tam = strlen(dtNasc);
+  Agenda *no;
 
-  if (tam != 10)
-    return 0;
+  FILE *agendaContato = fopen("contatos.txt", "w");
 
-  for (int i = 0; i < tam; i++)
+  for (no = ag; no != NULL; no = no->proximo)
   {
-    if (dtNasc[i] > '0' || dtNasc[i] < '9')
-    {
-      if (i == 2 && dtNasc[i] != '/')
-        return 0;
-      if (i == 5 && dtNasc[i] != '/')
-        return 0;
-    }
+    fprintf(agendaContato, "%s\n", no->pessoa.nome);
+    fprintf(agendaContato, "%s\n", no->pessoa.telefone);
+    fprintf(agendaContato, "%s\n", no->pessoa.endereco);
+    fprintf(agendaContato, "%u\n", no->pessoa.cep);
+    fprintf(agendaContato, "%s\n$\n", no->pessoa.dtNasc);
   }
-  return 1;
+  printf("Contatos salvos em contatos.txt!\n");
+  fclose(agendaContato);
 }
 
-int validaTelefone(char *telefone)
+void menu()
 {
-  int tam = strlen(telefone);
-
-  if (tam != 10)
-    return 0;
-
-  for (int i = 0; i < tam - 1; i++)
-  {
-    if (telefone[i] > '0' || telefone[i] < '9')
-    {
-      if (i == 5 && telefone[i] != '-')
-        return 0;
-    }
-  }
-  return 1;
+  printf("************************\n");
+  printf("*\t AGENDA        *\n");
+  printf("************************\n");
+  printf("*  Opções:             *");
+  printf("\n*  1. Inserir.         *" );
+  printf("\n*  2. Remover.         *" );
+  printf("\n*  3. Buscar.          *" );
+  printf("\n*  4. Imprimir.        *" );
+  printf("\n*  5. Sair.            *" );
+  printf("\n************************");
+  printf("\nDigite a opção desejada: ");
 }
