@@ -443,7 +443,6 @@ void remover(Agenda **ag , char *removeNome)
         else
         {
           aux->proximo  = temp->proximo;
-          temp->proximo->anterior = *ag;
           temp->proximo  = NULL;
           temp->anterior = NULL;
 
