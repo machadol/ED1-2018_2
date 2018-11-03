@@ -52,9 +52,9 @@ int main(int argc, char const *argv[])
   numTotalVoos = numAproxima + numDecola;
 
   // Aleatorizando Decolagem
+  srand(time(NULL)+1);
   for (int i = 0; i < numDecola; i++)
   {   
-    srand(time(NULL)+1);
     vooAleatorio =  rand() % 64;
 
     if (*(selecionaIdVoo + vooAleatorio) == 1)
@@ -68,9 +68,9 @@ int main(int argc, char const *argv[])
     }
   }
   // Aleatorizando Aproximação
+  srand(time(NULL)+1);
   for (int i = 0; i < numAproxima; i++)
   {   
-    srand(time(NULL)+1);
     vooAleatorio =  rand() % 64;
 
     if (*(selecionaIdVoo + vooAleatorio) == 1)
@@ -135,7 +135,7 @@ int main(int argc, char const *argv[])
 			}
 			else if (filaDecola->inicio != NULL)
 			{
-				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 1, filaAproxima->inicio->prioridade);
+				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 1, filaDecola->inicio->prioridade);
 				retiraFila(filaDecola);
 				pista1 = 2; // 2 unidade de tempo decolagem
 			}
@@ -151,7 +151,7 @@ int main(int argc, char const *argv[])
 			}
 			else if (filaDecola->inicio != NULL)
 			{
-				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 2, filaAproxima->inicio->prioridade);
+				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 2, filaDecola->inicio->prioridade);
 				retiraFila(filaDecola);
 				pista2 = 2; // 2 unidade de tempo decolagem
 			}
@@ -161,10 +161,9 @@ int main(int argc, char const *argv[])
 		{
 			if (pista3 == 0)
 			{
-				printf("ALERTA GERAL DE DESVIO DE AERONAVE\n");
 				imprimiEvento(filaAproxima->inicio->idVoo, 'A', hora, minuto, 3, filaAproxima->inicio->prioridade);
 				retiraFila(filaAproxima);
-				pista1 = 4; // 1 unidade de tempo aproximação + 3 unidade de tempo pouso
+				pista3 = 4; // 1 unidade de tempo aproximação + 3 unidade de tempo pouso
 			}
 		}
 		
@@ -172,9 +171,9 @@ int main(int argc, char const *argv[])
 		{
 			if (filaDecola->inicio != NULL)
 			{
-				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 3, filaAproxima->inicio->prioridade);
+				imprimiEvento(filaDecola->inicio->idVoo, 'D', hora, minuto, 3, filaDecola->inicio->prioridade);
 				retiraFila(filaDecola);
-				pista2 = 2; // 2 unidade de tempo decolagem
+				pista3 = 2; // 2 unidade de tempo decolagem
 			}
 		}
 
