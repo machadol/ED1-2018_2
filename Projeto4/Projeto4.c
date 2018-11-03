@@ -53,38 +53,34 @@ int main(int argc, char const *argv[])
 
   // Aleatorizando Decolagem
   srand(time(NULL)+1);
-  for (int i = 0; i < numDecola; i++)
+  int i = 1;
+  do
   {   
     vooAleatorio =  rand() % 64;
 
-    if (*(selecionaIdVoo + vooAleatorio) == 1)
-    {
-      i--;
-    }
-    else if (*(selecionaIdVoo + vooAleatorio) == 0)
+    if (*(selecionaIdVoo + vooAleatorio) == 0)
     {
       *(selecionaIdVoo + vooAleatorio) = 1;
       insereFila(filaDecola, idVoo[vooAleatorio], 'D', 12);
+      i++;
     }
-  }
+  } while(i != numDecola);
   // Aleatorizando Aproximação
   srand(time(NULL)+1);
-  for (int i = 0; i < numAproxima; i++)
+  int j = 1;
+  do
   {   
     vooAleatorio =  rand() % 64;
 
-    if (*(selecionaIdVoo + vooAleatorio) == 1)
-    {
-      i--;
-    }
-    else if (*(selecionaIdVoo + vooAleatorio) == 0)
+    if (*(selecionaIdVoo + vooAleatorio) == 0)
     {
       *(selecionaIdVoo + vooAleatorio) = 1;
       prioridade = rand()%13;
       insereFila(filaAproxima, idVoo[vooAleatorio], 'A', prioridade);
       bubbleSort(filaAproxima->inicio);
+      j++;
     }
-  }
+  } while(j != numAproxima);
 
 
   free(selecionaIdVoo);
