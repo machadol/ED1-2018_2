@@ -31,8 +31,8 @@ void printPostOrder(Tree *);
 Tree *balanceTree(Tree *, char []);
 
 Tree *insert(Tree *, int);
-int auxShowTree(Tree *, int, int, int, char **);
-int getLevelUtil(Tree *, int, int); 
+int  auxShowTree(Tree *, int, int, int, char **);
+int  getLevelUtil(Tree *, int, int); 
 void getLevel(Tree *, int);
 void getParent(Tree *, int);
 void getChild(Tree *, int);
@@ -40,13 +40,12 @@ void freeTree(Tree *);
 Tree *minValueNode(Tree *); 
 bool isBalanced(Tree *, int *); 
     
-int max(int, int ); 
-int height(avlTree *);
 avlTree *newNode(int);
 avlTree *rightRotate(avlTree *); 
 avlTree *leftRotate(avlTree *);
 avlTree* createAvlTree(avlTree *, int); 
 int getBalance(avlTree *);
+int heightOfNode(avlTree *);
 
 int main(int argc, char const *argv[])
 {	
@@ -64,7 +63,7 @@ int main(int argc, char const *argv[])
 		printf(" 7. Imprimir in order.\n");
 		printf(" 8. Imprimir pre order.\n");
 		printf(" 9. Imprimir post order.\n");
-		printf("10. Balanciamento.\n");
+		printf("10. Balanceamento.\n");
 		printf("11. Sair\n");
 		printf("Opção: ");
 		scanf("%d%*c", &op);
@@ -142,7 +141,6 @@ int main(int argc, char const *argv[])
 				break;
 			case 10:
 				system("clear");
-				printf("%s\n",fileName);
 				root = balanceTree(root, fileName);
 				break;
 			case 11:
@@ -325,7 +323,10 @@ Tree *balanceTree(Tree *r, char fileName[])
 
 	int height = 0;
 	if(isBalanced(r, &height)) 
+	{
     printf("Árvore já está balanceada."); 
+  	return r;
+	}
   else
   {
 		FILE *fp;
@@ -359,7 +360,7 @@ Tree* insert(Tree *r, int value)
   return r;
 }
 
-int auxShowTree(Tree *r, int isLeft, int offset, int depth, char **s) 
+int auxShowTree(Tree *r, int isLeft, int offset, int height, char **s) 
 {
 	char b[20];
   int width = 5;
@@ -368,23 +369,23 @@ int auxShowTree(Tree *r, int isLeft, int offset, int depth, char **s)
 
   sprintf(b, " %3d ", r->value);
 
-  int left  = auxShowTree(r->left,  1, offset, depth + 1, s);
-  int right = auxShowTree(r->right, 0, offset + left + width, depth + 1, s);
+  int left  = auxShowTree(r->left,  1, offset, height + 1, s);
+  int right = auxShowTree(r->right, 0, offset + left + width, height + 1, s);
 
   for (int i = 0; i < width; i++)
-  	s[2 * depth][offset + left + i] = b[i];
+  	s[2 * height][offset + left + i] = b[i];
 
-  if (depth && isLeft) 
+  if (height && isLeft) 
   {
   	for (int i = 0; i < width + right+1; i++)
-  		s[2 * depth - 1][offset + left + width/2 + i] = '_';
-  	s[2 * depth - 1][offset + left + width + right + width/2] = '|';
+  		s[2 * height - 1][offset + left + width/2 + i] = '_';
+  	s[2 * height - 1][offset + left + width + right + width/2] = '|';
   } 
-  else if (depth && !isLeft) 
+  else if (height && !isLeft) 
   {
   	for (int i = 0; i < left + width; i++)
-  		s[2 * depth - 1][offset - width/2 + i] = '_';
-  	s[2 * depth - 1][offset - width/2 - 1] = '|';
+  		s[2 * height - 1][offset - width/2 + i] = '_';
+  	s[2 * height - 1][offset - width/2 - 1] = '';
   }
 
 	return left + width + right;
@@ -504,19 +505,6 @@ bool isBalanced(Tree *r, int *height)
   	return laux&&raux; 
 }
 
-int height(avlTree *N) 
-{ 
-  if (N == NULL) 
-    return 0; 
-  return N->height; 
-} 
-  
-int max(int a, int b) 
-{ 
-
-  return (a > b)? a : b; 
-} 
-  
 avlTree* newNode(int value) 
 { 
   avlTree* node = (avlTree*)malloc(sizeof(avlTree)); 
@@ -535,27 +523,32 @@ avlTree *rightRotate(avlTree *y)
   x->right = y; 
   y->left = T2; 
 
-  y->height = max(height(y->left), height(y->right))+1; 
-  x->height = max(height(x->left), height(x->right))+1; 
+  int ya = heightOfNode(y->left);
+  int yb = heightOfNode(y->right);
+  int xa = heightOfNode(x->left);
+  int xb = heightOfNode(x->right);
+  y->height = ((ya > yb ? ya:yb)) + 1; 
+  x->height = ((xa > xb ? xa:xb)) + 1; 
 
   return x; 
 } 
   
 avlTree *leftRotate(avlTree *x) 
 { 
-    avlTree *y = x->right; 
-    avlTree *T2 = y->left; 
+  avlTree *y = x->right; 
+  avlTree *T2 = y->left; 
   
-    // Perform rotation 
-    y->left = x; 
-    x->right = T2; 
+  y->left = x; 
+  x->right = T2; 
   
-    //  Update heights 
-    x->height = max(height(x->left), height(x->right))+1; 
-    y->height = max(height(y->left), height(y->right))+1; 
-  
-    // Return new root 
-    return y; 
+  int ya = heightOfNode(y->left);
+  int yb = heightOfNode(y->right);
+  int xa = heightOfNode(x->left);
+  int xb = heightOfNode(x->right);
+  y->height = ((ya > yb ? ya:yb)) + 1; 
+  x->height = ((xa > xb ? xa:xb)) + 1; 
+
+  return y; 
 } 
   
 avlTree* createAvlTree(avlTree* node, int value) 
@@ -570,7 +563,9 @@ avlTree* createAvlTree(avlTree* node, int value)
   else 
     return node; 
 
-  node->height = 1 + max(height(node->left), height(node->right)); 
+  int nodea = heightOfNode(node->left);
+  int nodeb = heightOfNode(node->right);
+  node->height = ((nodea > nodeb ? nodea:nodeb)) + 1; 
   
   int balance = getBalance(node); 
   
@@ -599,5 +594,12 @@ int getBalance(avlTree *N)
 { 
   if (N == NULL) 
     return 0; 
-  return height(N->left) - height(N->right); 
+  return heightOfNode(N->left) - heightOfNode(N->right); 
+} 
+
+int heightOfNode(avlTree *N) 
+{ 
+  if (N == NULL) 
+    return 0; 
+  return N->height; 
 } 
