@@ -385,7 +385,7 @@ int auxShowTree(Tree *r, int isLeft, int offset, int height, char **s)
   {
   	for (int i = 0; i < left + width; i++)
   		s[2 * height - 1][offset - width/2 + i] = '_';
-  	s[2 * height - 1][offset - width/2 - 1] = '';
+  	s[2 * height - 1][offset - width/2 - 1] = '|';
   }
 
 	return left + width + right;
